@@ -578,8 +578,269 @@ if (nrow(fig4_resid) > 20) {
   cat("Residualized scatter saved to: cmhc_fig4_timing_exogeneity_residualized.png\n")
 }
 
+# ==========================================
+# STEP 12c: Robustness — CMHC effects are not driven by CHCs
+# ==========================================
+# Community Health Centers (CHCs) were rolling out in the same era.
+# We show the CMHC effect is not confounded by CHC openings using:
+#   (i)   Horse race: CMHC + CHC event-time indicators
+#   (ii)  Control for CHC per-capita funding (pcrfund_chc)
+#   (iii) Restrict sample to never-CHC counties
+
+cat("\n\n##########################################################\n")
+cat("ROBUSTNESS: CMHC Effects Are Not Driven by CHC Openings\n")
+cat("##########################################################\n\n")
+
+# --- Prepare CHC event-time variable ---
+# chc_year_exp is already in the data from the original AER dataset
+# Create CHC event time, analogous to CMHC event time
+
+data <- data %>%
+  mutate(
+    chc_event_time = year - chc_year_exp,
+    chc_event_time_binned = case_when(
+      is.na(chc_event_time) ~ -999L,
+      chc_event_time <= -6  ~ -6L,
+      chc_event_time >= 20  ~ 20L,
+      TRUE ~ as.integer(chc_event_time)
+    )
+  )
+
+# Flag counties that EVER received a CHC grant
+data <- data %>%
+  group_by(fips) %>%
+  mutate(ever_chc = as.integer(any(!is.na(chc_year_exp)))) %>%
+  ungroup()
+
+cat("CHC exposure summary:\n")
+cat("  Counties with CHC grant:", n_distinct(data$fips[data$ever_chc == 1]), "\n")
+cat("  Counties without CHC grant:", n_distinct(data$fips[data$ever_chc == 0]), "\n")
+cat("  Counties with CMHC (treated):", n_distinct(data$fips[!is.na(data$cmhc_year_exp)]), "\n")
+cat("  CMHC-treated counties that also got CHC:",
+    n_distinct(data$fips[!is.na(data$cmhc_year_exp) & data$ever_chc == 1]), "\n\n")
+
+
+# ==================================================================
+# (i) Horse Race: CMHC + CHC event-time indicators (AMR 20-49)
+# ==================================================================
+
+cat("-----------------------------------------------------------\n")
+cat("(i) Horse Race: CMHC + CHC Event-Time Indicators\n")
+cat("    Dependent Variable: AMR (Ages 20-49)\n")
+cat("-----------------------------------------------------------\n\n")
+
+model_horse_ad <- feols(
+  amr_ad ~ i(event_time_binned, ref = -1) + i(chc_event_time_binned, ref = -1) +
+    D_tot_act_md_t + H_bpc | fips + year^Durb + year^stfips,
+  data = data,
+  weights = ~popwt_ad,
+  cluster = ~fips
+)
+
+cat("CMHC coefficients (with CHC event-time controls):\n")
+print(summary(model_horse_ad))
+
+# Extract CMHC coefficients from horse race
+coef_names_hr <- names(coef(model_horse_ad))
+cmhc_idx_hr <- grepl("^event_time_binned::(-?[0-9]+)$", coef_names_hr)
+coef_df_horse <- data.frame(
+  event_time = as.numeric(gsub("^event_time_binned::(-?[0-9]+)$", "\\1", coef_names_hr[cmhc_idx_hr])),
+  coefficient = coef(model_horse_ad)[cmhc_idx_hr],
+  se = sqrt(diag(vcov(model_horse_ad)))[cmhc_idx_hr]
+) %>%
+  filter(event_time != -999)
+
+coef_df_horse$ci_lower <- coef_df_horse$coefficient - 1.96 * coef_df_horse$se
+coef_df_horse$ci_upper <- coef_df_horse$coefficient + 1.96 * coef_df_horse$se
+coef_df_horse <- rbind(coef_df_horse, data.frame(event_time = -1, coefficient = 0, se = 0, ci_lower = 0, ci_upper = 0))
+coef_df_horse <- coef_df_horse %>% arrange(event_time)
+
+# Plot horse race
+p_horse <- ggplot(coef_df_horse, aes(x = event_time, y = coefficient)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_vline(xintercept = -0.5, linetype = "dashed", color = "gray50") +
+  geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), fill = "steelblue", alpha = 0.2) +
+  geom_point(color = "steelblue", size = 2) +
+  geom_line(color = "steelblue", linewidth = 0.8) +
+  labs(
+    title = "CMHC Event Study: Horse Race with CHC Event-Time Controls",
+    subtitle = "AMR (Ages 20\u201349). CMHC coefficients shown; CHC event-time indicators included as controls.",
+    x = "Years Relative to CMHC Opening",
+    y = "Change in Deaths per 100,000"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(face = "bold"), panel.grid.minor = element_blank())
+
+ggsave("cmhc_robustness_horse_race_ad.png", p_horse, width = 10, height = 6, dpi = 300)
+cat("\nHorse race plot saved to: cmhc_robustness_horse_race_ad.png\n")
+
+# Also run for all-ages AMR
+model_horse_all <- feols(
+  amr ~ i(event_time_binned, ref = -1) + i(chc_event_time_binned, ref = -1) +
+    D_tot_act_md_t + H_bpc | fips + year^Durb + year^stfips,
+  data = data,
+  weights = ~popwt,
+  cluster = ~fips
+)
+
+cat("\n\nHorse race — AMR (All Ages):\n")
+print(summary(model_horse_all))
+
+
+# ==================================================================
+# (ii) Control for CHC Per-Capita Funding
+# ==================================================================
+
+cat("\n-----------------------------------------------------------\n")
+cat("(ii) Controlling for CHC Per-Capita Funding (pcrfund_chc)\n")
+cat("     Dependent Variable: AMR (Ages 20-49)\n")
+cat("-----------------------------------------------------------\n\n")
+
+# Replace NA funding with 0 (no CHC = no funding)
+data <- data %>%
+  mutate(pcrfund_chc = replace_na(pcrfund_chc, 0))
+
+model_chcfund_ad <- feols(
+  amr_ad ~ i(event_time_binned, ref = -1) + pcrfund_chc +
+    D_tot_act_md_t + H_bpc | fips + year^Durb + year^stfips,
+  data = data,
+  weights = ~popwt_ad,
+  cluster = ~fips
+)
+
+cat("CMHC event study controlling for CHC funding:\n")
+print(summary(model_chcfund_ad))
+
+# Extract CMHC coefficients
+coef_names_cf <- names(coef(model_chcfund_ad))
+cmhc_idx_cf <- grepl("^event_time_binned::(-?[0-9]+)$", coef_names_cf)
+coef_df_chcfund <- data.frame(
+  event_time = as.numeric(gsub("^event_time_binned::(-?[0-9]+)$", "\\1", coef_names_cf[cmhc_idx_cf])),
+  coefficient = coef(model_chcfund_ad)[cmhc_idx_cf],
+  se = sqrt(diag(vcov(model_chcfund_ad)))[cmhc_idx_cf]
+) %>%
+  filter(event_time != -999)
+
+coef_df_chcfund$ci_lower <- coef_df_chcfund$coefficient - 1.96 * coef_df_chcfund$se
+coef_df_chcfund$ci_upper <- coef_df_chcfund$coefficient + 1.96 * coef_df_chcfund$se
+coef_df_chcfund <- rbind(coef_df_chcfund, data.frame(event_time = -1, coefficient = 0, se = 0, ci_lower = 0, ci_upper = 0))
+coef_df_chcfund <- coef_df_chcfund %>% arrange(event_time)
+
+# Comparison plot: baseline vs CHC-fund-controlled
+coef_compare <- bind_rows(
+  coef_df_ad %>% mutate(model = "Baseline"),
+  coef_df_chcfund %>% mutate(model = "+ CHC Funding Control")
+)
+
+p_chcfund <- ggplot(coef_compare, aes(x = event_time, y = coefficient, color = model, fill = model)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_vline(xintercept = -0.5, linetype = "dashed", color = "gray50") +
+  geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.1, color = NA) +
+  geom_point(size = 2, position = position_dodge(width = 0.4)) +
+  geom_line(linewidth = 0.8, position = position_dodge(width = 0.4)) +
+  scale_color_manual(values = c("Baseline" = "steelblue", "+ CHC Funding Control" = "darkorange")) +
+  scale_fill_manual(values = c("Baseline" = "steelblue", "+ CHC Funding Control" = "darkorange")) +
+  labs(
+    title = "CMHC Event Study: Baseline vs. Controlling for CHC Funding",
+    subtitle = "AMR (Ages 20\u201349). Adding per-capita CHC funding as a time-varying control.",
+    x = "Years Relative to CMHC Opening",
+    y = "Change in Deaths per 100,000",
+    color = "Specification", fill = "Specification"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold"),
+    panel.grid.minor = element_blank(),
+    legend.position = "bottom"
+  )
+
+ggsave("cmhc_robustness_chc_funding_control.png", p_chcfund, width = 10, height = 6, dpi = 300)
+cat("\nCHC funding control comparison plot saved to: cmhc_robustness_chc_funding_control.png\n")
+
+
+# ==================================================================
+# (iii) Restrict to Never-CHC Counties
+# ==================================================================
+
+cat("\n-----------------------------------------------------------\n")
+cat("(iii) Restrict Sample to Never-CHC Counties\n")
+cat("      Dependent Variable: AMR (Ages 20-49)\n")
+cat("-----------------------------------------------------------\n\n")
+
+data_no_chc <- data %>% filter(ever_chc == 0)
+
+cat("Never-CHC sample:\n")
+cat("  Total counties:", n_distinct(data_no_chc$fips), "\n")
+cat("  CMHC-treated counties:", n_distinct(data_no_chc$fips[!is.na(data_no_chc$cmhc_year_exp)]), "\n")
+cat("  Observations:", nrow(data_no_chc), "\n\n")
+
+# Check there are enough treated counties
+n_treated_no_chc <- n_distinct(data_no_chc$fips[!is.na(data_no_chc$cmhc_year_exp)])
+
+if (n_treated_no_chc >= 10) {
+  model_nochc_ad <- feols(
+    amr_ad ~ i(event_time_binned, ref = -1) + D_tot_act_md_t + H_bpc | fips + year^Durb + year^stfips,
+    data = data_no_chc,
+    weights = ~popwt_ad,
+    cluster = ~fips
+  )
+
+  cat("CMHC event study — never-CHC counties only:\n")
+  print(summary(model_nochc_ad))
+
+  # Extract coefficients
+  coef_names_nc <- names(coef(model_nochc_ad))
+  cmhc_idx_nc <- grepl("^event_time_binned::(-?[0-9]+)$", coef_names_nc)
+  coef_df_nochc <- data.frame(
+    event_time = as.numeric(gsub("^event_time_binned::(-?[0-9]+)$", "\\1", coef_names_nc[cmhc_idx_nc])),
+    coefficient = coef(model_nochc_ad)[cmhc_idx_nc],
+    se = sqrt(diag(vcov(model_nochc_ad)))[cmhc_idx_nc]
+  ) %>%
+    filter(event_time != -999)
+
+  coef_df_nochc$ci_lower <- coef_df_nochc$coefficient - 1.96 * coef_df_nochc$se
+  coef_df_nochc$ci_upper <- coef_df_nochc$coefficient + 1.96 * coef_df_nochc$se
+  coef_df_nochc <- rbind(coef_df_nochc, data.frame(event_time = -1, coefficient = 0, se = 0, ci_lower = 0, ci_upper = 0))
+  coef_df_nochc <- coef_df_nochc %>% arrange(event_time)
+
+  # Comparison plot: full sample vs never-CHC
+  coef_compare_nc <- bind_rows(
+    coef_df_ad %>% mutate(model = "Full Sample"),
+    coef_df_nochc %>% mutate(model = "Never-CHC Counties Only")
+  )
+
+  p_nochc <- ggplot(coef_compare_nc, aes(x = event_time, y = coefficient, color = model, fill = model)) +
+    geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+    geom_vline(xintercept = -0.5, linetype = "dashed", color = "gray50") +
+    geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.1, color = NA) +
+    geom_point(size = 2, position = position_dodge(width = 0.4)) +
+    geom_line(linewidth = 0.8, position = position_dodge(width = 0.4)) +
+    scale_color_manual(values = c("Full Sample" = "steelblue", "Never-CHC Counties Only" = "darkgreen")) +
+    scale_fill_manual(values = c("Full Sample" = "steelblue", "Never-CHC Counties Only" = "darkgreen")) +
+    labs(
+      title = "CMHC Event Study: Full Sample vs. Never-CHC Counties",
+      subtitle = "AMR (Ages 20\u201349). Excludes all counties that ever received a CHC grant.",
+      x = "Years Relative to CMHC Opening",
+      y = "Change in Deaths per 100,000",
+      color = "Sample", fill = "Sample"
+    ) +
+    theme_minimal(base_size = 12) +
+    theme(
+      plot.title = element_text(face = "bold"),
+      panel.grid.minor = element_blank(),
+      legend.position = "bottom"
+    )
+
+  ggsave("cmhc_robustness_never_chc.png", p_nochc, width = 10, height = 6, dpi = 300)
+  cat("\nNever-CHC comparison plot saved to: cmhc_robustness_never_chc.png\n")
+
+  write.csv(coef_df_nochc, "cmhc_event_study_coefficients_ad_nochc.csv", row.names = FALSE)
+} else {
+  cat("WARNING: Only", n_treated_no_chc, "CMHC-treated counties without CHC. Too few for reliable estimation.\n")
+}
+
 cat("\n==========================================================\n")
-cat("End of CMHC Event Study\n")
+cat("End of CHC Robustness Checks (Event Study)\n")
 cat("==========================================================\n")
 
 
@@ -905,3 +1166,141 @@ cat("* p<0.10, ** p<0.05, *** p<0.01\n")
 # Save results
 write.csv(coef_table_ld, "cmhc_long_difference_results.csv", row.names = FALSE)
 cat("\nLong-difference results saved to: cmhc_long_difference_results.csv\n")
+
+
+# ==========================================
+# STEP 14: Long-Difference CHC Robustness
+# ==========================================
+# Add CHC controls to the incarceration long-difference regressions
+# to show the CMHC effect on jail rates is not driven by CHCs.
+
+cat("\n\n##########################################################\n")
+cat("ROBUSTNESS: Long-Difference with CHC Controls\n")
+cat("##########################################################\n\n")
+
+# Add CHC indicator to long-difference data
+# chc_year_exp is in the original data; get cross-sectional version
+chc_xsec <- data %>%
+  filter(year == 1970) %>%
+  select(fips, chc_year_exp, pcrfund_chc_1970 = pcrfund_chc, grant_chc_1970 = grant_chc) %>%
+  mutate(
+    chc_by_1978 = as.integer(!is.na(chc_year_exp) & chc_year_exp <= 1978),
+    ever_chc = as.integer(!is.na(chc_year_exp))
+  )
+
+# Also get 1978 CHC funding for change
+chc_1978 <- data %>%
+  filter(year == 1978) %>%
+  select(fips, pcrfund_chc_1978 = pcrfund_chc, grant_chc_1978 = grant_chc)
+
+ld_data_valid <- ld_data_valid %>%
+  left_join(chc_xsec, by = "fips") %>%
+  left_join(chc_1978, by = "fips") %>%
+  mutate(
+    pcrfund_chc_1970 = replace_na(pcrfund_chc_1970, 0),
+    pcrfund_chc_1978 = replace_na(pcrfund_chc_1978, 0),
+    grant_chc_1970 = replace_na(grant_chc_1970, 0),
+    grant_chc_1978 = replace_na(grant_chc_1978, 0),
+    chc_by_1978 = replace_na(chc_by_1978, 0L),
+    ever_chc = replace_na(ever_chc, 0L),
+    delta_pcrfund_chc = pcrfund_chc_1978 - pcrfund_chc_1970
+  )
+
+cat("CHC overlap in long-difference sample:\n")
+cat("  Counties with CHC by 1978:", sum(ld_data_valid$chc_by_1978 == 1), "\n")
+cat("  Counties with both CMHC and CHC by 1978:",
+    sum(ld_data_valid$cmhc == 1 & ld_data_valid$chc_by_1978 == 1), "\n\n")
+
+# Re-create subsamples with CHC variables
+ld_data_valid_small <- ld_data_valid %>%
+  filter(log_total_pop_15to64_1970 < log(30000)) %>%
+  group_by(stfips) %>%
+  filter(n() > 1) %>%
+  ungroup()
+
+# --- Model 5: Baseline Model 3a + CHC dummy ---
+model_ld5 <- lm(delta_log_jail_rate ~ cmhc + chc_by_1978 + `_60pcturban` + `_60pctrurf` +
+                  `_60pct04years` + `_60pctmt64years` + `_60pctnonwhit` +
+                  `_60pctmt12schl` + `_60pctlt4schl` + `_pct59inclt3k` +
+                  `_pct59incmt10k` + `_tot_act_md` + factor(stfips),
+                weights = popwt,
+                data = ld_data_valid_small)
+robust_se5 <- sqrt(diag(vcovHC(model_ld5, type = "HC1")))
+
+# --- Model 6: Baseline Model 3a + CHC per-capita funding ---
+model_ld6 <- lm(delta_log_jail_rate ~ cmhc + pcrfund_chc_1978 + `_60pcturban` + `_60pctrurf` +
+                  `_60pct04years` + `_60pctmt64years` + `_60pctnonwhit` +
+                  `_60pctmt12schl` + `_60pctlt4schl` + `_pct59inclt3k` +
+                  `_pct59incmt10k` + `_tot_act_md` + factor(stfips),
+                weights = popwt,
+                data = ld_data_valid_small)
+robust_se6 <- sqrt(diag(vcovHC(model_ld6, type = "HC1")))
+
+# --- Model 7: Restrict to never-CHC counties ---
+ld_no_chc <- ld_data_valid_small %>% filter(ever_chc == 0)
+
+# Need states with >1 obs
+ld_no_chc <- ld_no_chc %>%
+  group_by(stfips) %>%
+  filter(n() > 1) %>%
+  ungroup()
+
+cat("Never-CHC long-difference sample:", nrow(ld_no_chc), "counties\n")
+cat("  CMHC-treated:", sum(ld_no_chc$cmhc == 1), "\n\n")
+
+model_ld7 <- NULL
+robust_se7 <- NULL
+if (sum(ld_no_chc$cmhc == 1) >= 5) {
+  model_ld7 <- lm(delta_log_jail_rate ~ cmhc + `_60pcturban` + `_60pctrurf` +
+                    `_60pct04years` + `_60pctmt64years` + `_60pctnonwhit` +
+                    `_60pctmt12schl` + `_60pctlt4schl` + `_pct59inclt3k` +
+                    `_pct59incmt10k` + `_tot_act_md` + factor(stfips),
+                  weights = popwt,
+                  data = ld_no_chc)
+  robust_se7 <- sqrt(diag(vcovHC(model_ld7, type = "HC1")))
+}
+
+# --- Print comparison table ---
+cat("-----------------------------------------------------------\n")
+cat("Long-Difference with CHC Controls\n")
+cat("Dependent Variable: Δlog(jail_rate) 1970-1978\n")
+cat("-----------------------------------------------------------\n\n")
+
+cat("                                    (3a)        (5)         (6)         (7)\n")
+cat("                                  Baseline   +CHC Dummy  +CHC Funds  No-CHC Only\n")
+cat("-----------------------------------------------------------------------------------------------\n")
+
+# CMHC row
+cat(sprintf("CMHC exposure (1970-78)         %8.4f    %8.4f    %8.4f",
+            coef(model_ld3)["cmhc"], coef(model_ld5)["cmhc"], coef(model_ld6)["cmhc"]))
+if (!is.null(model_ld7)) cat(sprintf("    %8.4f", coef(model_ld7)["cmhc"]))
+cat("\n")
+
+cat(sprintf("  Robust SE                     (%6.4f)    (%6.4f)    (%6.4f)",
+            robust_se3["cmhc"], robust_se5["cmhc"], robust_se6["cmhc"]))
+if (!is.null(robust_se7)) cat(sprintf("    (%6.4f)", robust_se7["cmhc"]))
+cat("\n")
+
+# CHC rows
+cat(sprintf("CHC by 1978 (dummy)                         %8.4f\n", coef(model_ld5)["chc_by_1978"]))
+cat(sprintf("  Robust SE                                 (%6.4f)\n", robust_se5["chc_by_1978"]))
+cat(sprintf("CHC PC Funding 1978                                     %8.4f\n", coef(model_ld6)["pcrfund_chc_1978"]))
+cat(sprintf("  Robust SE                                             (%6.4f)\n", robust_se6["pcrfund_chc_1978"]))
+
+cat("-----------------------------------------------------------------------------------------------\n")
+cat(sprintf("Baseline controls                   Yes         Yes         Yes         Yes\n"))
+cat(sprintf("State fixed effects                 Yes         Yes         Yes         Yes\n"))
+cat(sprintf("CHC control                         No          Dummy       Funding     Excluded\n"))
+cat(sprintf("N counties                      %8d    %8d    %8d",
+            nobs(model_ld3), nobs(model_ld5), nobs(model_ld6)))
+if (!is.null(model_ld7)) cat(sprintf("    %8d", nobs(model_ld7)))
+cat("\n")
+cat(sprintf("R-squared                       %8.4f    %8.4f    %8.4f",
+            summary(model_ld3)$r.squared, summary(model_ld5)$r.squared, summary(model_ld6)$r.squared))
+if (!is.null(model_ld7)) cat(sprintf("    %8.4f", summary(model_ld7)$r.squared))
+cat("\n")
+cat("-----------------------------------------------------------------------------------------------\n")
+cat("Robust standard errors in parentheses. Small counties only (pop 15-64 < 30k).\n")
+cat("(3a) = baseline from main table. (5) adds CHC-by-1978 dummy.\n")
+cat("(6) adds 1978 per-capita CHC funding. (7) drops all ever-CHC counties.\n")
+cat("* p<0.10, ** p<0.05, *** p<0.01\n")

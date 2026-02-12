@@ -16,7 +16,7 @@ library(ggplot2)
 
 # ===== PARAMETERS ============================================================
 
-ANALYSIS_TYPE <- "incarceration"   # "incarceration" or "mortality"
+ANALYSIS_TYPE <- "mortality"   # "incarceration" or "mortality"
 
 # Medicaid demonstration waiver state FIPS (MN,MO,NV,NJ,NY,OK,OR,PA)
 WAIVER_ST_FIPS <- c("27","29","32","34","36","40","41","42")
@@ -202,10 +202,10 @@ m <- MatchIt::matchit(
   ### note: I can increase this ratio (more control counties) but that introduces pre-trends
 )
 
-matched_counties <- c(MatchIt::match.data(m)$fips, es[treated == 1, unique(fips)])
+# matched_counties <- c(MatchIt::match.data(m)$fips, es[treated == 1, unique(fips)])
 
 ## uncomment this to keep all never-treated counties (no matching)
-# matched_counties <- es[, unique(fips)]
+matched_counties <- es[, unique(fips)]
 
 # ========== 6. Helper: run model and extract coefficients ====================
 
@@ -213,6 +213,7 @@ run_event_study <- function(dt, label) {
   cat(sprintf("\n##########################################################\n"))
   cat(sprintf("EVENT STUDY: %s\n", label))
   cat(sprintf("##########################################################\n\n"))
+
 
   mod <- feols(
     outcome ~ i(event_time_binned, ref = -1) + total_pop |
@@ -252,6 +253,15 @@ run_event_study <- function(dt, label) {
                     signif = fifelse(abs(coefficient / se) > 2.576, "***",
                              fifelse(abs(coefficient / se) > 1.96,  "**",
                              fifelse(abs(coefficient / se) > 1.645, "*", ""))))])
+
+    # Print table of units by treatment and event time
+  cat("\nNumber of counties by treatment status and event time:\n")
+  units_table <- dt[, .(n_counties = uniqueN(fips)), by = .(treated, event_time_binned)]
+  units_wide <- dcast(units_table, treated ~ event_time_binned, value.var = "n_counties", fill = 0)
+  setorder(units_wide, -treated)
+  print(units_wide)
+  cat("\n")
+
 
   # Joint tests
   pre_names <- paste0("event_time_binned::", min_et:-2)
