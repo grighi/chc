@@ -9,6 +9,8 @@ library(readxl)
 library(fixest)  # For fast fixed effects estimation
 library(tidyr)
 
+baseline_use_controls <- TRUE
+
 # ==========================================
 # STEP 1: Load CMHC data from Excel files
 # ==========================================
@@ -132,11 +134,13 @@ if (!requireNamespace("fixest", quietly = TRUE)) {
 # Method 1: Using i() with event_time_factor
 # County FE, Year FE, Urban-by-Year FE, State-by-Year FE
 model_es <- feols(
-  amr ~ i(event_time_binned, ref = -1) + D_tot_act_md_t + H_bpc | fips + year^Durb + year^stfips,
-  data = data,
-  weights = ~popwt,
-  cluster = ~fips
+amr ~ i(event_time_binned, ref = -1) + D_tot_act_md_t + H_bpc
+  + `_60pcturban` + `_pct59inclt3k` + `_60pctnonwhit` | fips + year^Durb + year^stfips,
+data = data,
+weights = ~popwt,
+cluster = ~fips
 )
+
 
 # Print summary
 cat("-----------------------------------------------------------\n")
@@ -156,7 +160,7 @@ coef_df <- data.frame(
   coefficient = coef(model_es)[event_idx_es],
   se = sqrt(diag(vcov(model_es)))[event_idx_es]
 ) %>% 
-    filter(event_time != -999)
+    filter(event_time != -999 & event_time < 15)
 
 coef_df$ci_lower <- coef_df$coefficient - 1.96 * coef_df$se
 coef_df$ci_upper <- coef_df$coefficient + 1.96 * coef_df$se
@@ -247,7 +251,8 @@ data <- data %>%
 # )
 
 model_es_eld <- feols(
-  amr_eld ~ i(event_time_binned, ref = -1) + D_tot_act_md_t + H_bpc | fips + year^Durb + year^stfips,
+  amr_eld ~ i(event_time_binned, ref = -1) + D_tot_act_md_t + H_bpc 
+  + `_60pcturban` + `_pct59inclt3k` + `_60pctnonwhit` | fips + year^Durb + year^stfips,
   data = data,
   weights = ~popwt_eld,
   cluster = ~fips
@@ -263,7 +268,7 @@ coef_df_eld <- data.frame(
   coefficient = coef(model_es_eld)[event_idx_eld],
   se = sqrt(diag(vcov(model_es_eld)))[event_idx_eld]
 ) %>% 
-  filter(event_time != -999)
+  filter(event_time != -999 & event_time < 15)
 
 coef_df_eld$ci_lower <- coef_df_eld$coefficient - 1.96 * coef_df_eld$se
 coef_df_eld$ci_upper <- coef_df_eld$coefficient + 1.96 * coef_df_eld$se
@@ -316,7 +321,8 @@ data <- data %>%
 # )
 
 model_es_ad <- feols(
-  amr_ad ~ i(event_time_binned, ref = -1) + D_tot_act_md_t + H_bpc | fips + year^Durb + year^stfips,
+  amr_ad ~ i(event_time_binned, ref = -1) + D_tot_act_md_t + H_bpc 
+  + `_60pcturban` + `_pct59inclt3k` + `_60pctnonwhit` | fips + year^Durb + year^stfips,
   data = data,
   weights = ~popwt_ad,
   cluster = ~fips
@@ -332,7 +338,7 @@ coef_df_ad <- data.frame(
   coefficient = coef(model_es_ad)[event_idx_ad],
   se = sqrt(diag(vcov(model_es_ad)))[event_idx_ad]
 ) %>% 
-  filter(event_time != -999)
+  filter(event_time != -999 & event_time < 15)
 
 coef_df_ad$ci_lower <- coef_df_ad$coefficient - 1.96 * coef_df_ad$se
 coef_df_ad$ci_upper <- coef_df_ad$coefficient + 1.96 * coef_df_ad$se
@@ -436,10 +442,44 @@ p_ad <- ggplot(coef_df_ad, aes(x = event_time, y = coefficient)) +
 ggsave("cmhc_event_study_amr_ad.png", p_ad, width = 10, height = 6, dpi = 300)
 cat("Plot saved to: cmhc_event_study_amr_ad.png\n")
 
+# Age heterogeneity plot: Adults vs Elderly side-by-side
+coef_df_ad$age_group <- "Adults (20-49)"
+coef_df_eld$age_group <- "Elderly (50+)"
+coef_df_combined <- rbind(coef_df_ad, coef_df_eld)
+
+p_age_het <- ggplot(coef_df_combined, aes(x = event_time, y = coefficient, 
+                                           color = age_group, fill = age_group)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_vline(xintercept = -0.5, linetype = "dashed", color = "gray50") +
+  geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.2, 
+              color = NA) +
+  geom_point(size = 2) +
+  geom_line(linewidth = 0.8) +
+  scale_color_manual(values = c("Adults (20-49)" = "darkred", "Elderly (50+)" = "steelblue")) +
+  scale_fill_manual(values = c("Adults (20-49)" = "darkred", "Elderly (50+)" = "steelblue")) +
+  labs(
+    title = "CMHC Effects on Mortality by Age Group",
+    subtitle = "Event study coefficients with 95% CI, reference period t = -1",
+    x = "Years Relative to CMHC Opening",
+    y = "Change in Deaths per 100,000",
+    color = "Age Group",
+    fill = "Age Group"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold"),
+    panel.grid.minor = element_blank(),
+    legend.position = "bottom"
+  )
+
+ggsave("cmhc_age_heterogeneity.png", p_age_het, width = 10, height = 6, dpi = 300)
+cat("Plot saved to: cmhc_age_heterogeneity.png\n")
+
 # Display plots
 # print(p_amr)
 # print(p_eld)
 # print(p_ad)
+# print(p_age_het)
 
 
 
@@ -550,7 +590,7 @@ if (nrow(fig4_resid) > 20) {
   resid_x <- lm(cmhc_year_exp ~ `_60pcturban` + `_60pctnonwhit` + `_pct59inclt3k`,
                  data = fig4_resid, weights = popwt_ad)
   fig4_resid$amr_resid <- residuals(resid_y)
-  fig4_resid$year_resid <- residuals(resid_x)
+  fig4_resid$year_resid <- residuals(resid_x) + resid_x$coef['(Intercept)']
 
   fit_resid <- lm(amr_resid ~ year_resid, data = fig4_resid, weights = popwt_ad)
   cat(sprintf("  Residualized slope: %.3f (SE: %.3f, p = %.3f)\n",
@@ -648,7 +688,7 @@ coef_df_horse <- data.frame(
   coefficient = coef(model_horse_ad)[cmhc_idx_hr],
   se = sqrt(diag(vcov(model_horse_ad)))[cmhc_idx_hr]
 ) %>%
-  filter(event_time != -999)
+  filter(event_time != -999 & event_time < 15)
 
 coef_df_horse$ci_lower <- coef_df_horse$coefficient - 1.96 * coef_df_horse$se
 coef_df_horse$ci_upper <- coef_df_horse$coefficient + 1.96 * coef_df_horse$se
@@ -719,7 +759,7 @@ coef_df_chcfund <- data.frame(
   coefficient = coef(model_chcfund_ad)[cmhc_idx_cf],
   se = sqrt(diag(vcov(model_chcfund_ad)))[cmhc_idx_cf]
 ) %>%
-  filter(event_time != -999)
+  filter(event_time != -999 & event_time < 15)
 
 coef_df_chcfund$ci_lower <- coef_df_chcfund$coefficient - 1.96 * coef_df_chcfund$se
 coef_df_chcfund$ci_upper <- coef_df_chcfund$coefficient + 1.96 * coef_df_chcfund$se
@@ -796,7 +836,7 @@ if (n_treated_no_chc >= 10) {
     coefficient = coef(model_nochc_ad)[cmhc_idx_nc],
     se = sqrt(diag(vcov(model_nochc_ad)))[cmhc_idx_nc]
   ) %>%
-    filter(event_time != -999)
+    filter(event_time != -999 & event_time < 15)
 
   coef_df_nochc$ci_lower <- coef_df_nochc$coefficient - 1.96 * coef_df_nochc$se
   coef_df_nochc$ci_upper <- coef_df_nochc$coefficient + 1.96 * coef_df_nochc$se
