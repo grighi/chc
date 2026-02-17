@@ -16,10 +16,20 @@ library(ggplot2)
 
 # ===== PARAMETERS ============================================================
 
-ANALYSIS_TYPE <- "mortality"   # "incarceration" or "mortality"
-weighting <- TRUE
-matching  <- FALSE
+ANALYSIS_TYPE <- "mortality_f"
+
+weighting      <- TRUE
+matching       <- FALSE
 balanced_panel <- TRUE
+
+# if (ANALYSIS_TYPE == "incarceration") {
+# } else if (ANALYSIS_TYPE == "mortality") {
+#   weighting      <- TRUE
+#   matching       <- FALSE
+#   balanced_panel <- FALSE
+# } else {
+#   stop("ANALYSIS_TYPE must be 'incarceration' or 'mortality'")
+# }
 
 cat(rep(".\n", 20))
 cat("\n=============================================================================================\n")
@@ -64,6 +74,8 @@ treat <- grants[!is.na(treat_year) & !grepl("NA", fips),
 cat(sprintf("Unique treated counties: %d\n", nrow(treat)))
 cat("Treatment year distribution:\n")
 print(table(treat$treat_year))
+
+treat <- treat[treat_year %in% 2018:2024]
 
 # ========== 2. Load outcome data =============================================
 
@@ -167,8 +179,87 @@ if (ANALYSIS_TYPE == "incarceration") {
 
   panel[, fips := sprintf(fips, fmt = "%05d")]
 
+} else if (ANALYSIS_TYPE == "mortality_f") {
+
+  # Load mortality data for substance use deaths (ICD-F codes)
+  # Historical data 2012-2017
+  d_hist <- fread(
+    # "Mortality_ICD_F.csv",
+    # "Mortality_Covid.csv",
+    # "Mortality_non_F_or_Covid.csv",
+    "Mortality_U_V_codes.csv",
+                  na.strings = c("", "Suppressed", "Unreliable", "Not Applicable"),
+                  fill = TRUE)
+  
+  # Provisional data 2018-2025
+  d_prov <- fread(
+    # "Provisional_Mortality_ICD_F.csv",
+    # "Mortality_Covid_2018-25.csv",
+    # "Mortality_non_F_or_Covid_2018-25.csv",
+    "Mortality_U_V_codes_2018-25.csv",
+                  na.strings = c("", "Suppressed", "Unreliable", "Not Applicable"),
+                  fill = TRUE)
+
+  # Standardize column names
+  setnames(d_hist, c("County Code", "Year Code"), c("fips", "year"), skip_absent = TRUE)
+  setnames(d_prov, c("Residence County Code", "Year Code"), c("fips", "year"), skip_absent = TRUE)
+
+  d_hist[, year := as.integer(year)]
+  d_prov[, year := as.integer(trimws(as.character(year)))]
+
+  # Filter to desired years
+  d_hist <- d_hist[year >= 2012 & year <= 2017]
+  d_prov <- d_prov[year >= 2018 & year <= 2025]
+
+  # Keep relevant columns and combine
+  d_hist_sub <- d_hist[!is.na(fips), .(fips, year,
+                Deaths = as.numeric(Deaths), Population = as.numeric(Population))]
+  d_prov_sub <- d_prov[!is.na(fips), .(fips, year,
+                Deaths = as.numeric(Deaths))]
+  d_prov_sub[, Population := NA_real_]
+
+  mort <- rbindlist(list(d_hist_sub, d_prov_sub))
+
+  # --- Impute population for 2018-2025 using linear trend from 2012-2017 ---
+  pop_data <- mort[!is.na(Population), .(fips, year, Population)]
+  pop_models <- pop_data[, {
+    if (.N >= 2) {
+      m <- lm(Population ~ year)
+      .(intercept = coef(m)[1], slope = coef(m)[2])
+    } else {
+      .(intercept = NA_real_, slope = NA_real_)
+    }
+  }, by = fips]
+
+  impute_grid <- CJ(fips = pop_models[!is.na(slope), fips], year = 2018:2025)
+  impute_grid <- merge(impute_grid, pop_models, by = "fips")
+  impute_grid[, Population_imp := intercept + slope * year]
+  impute_grid[Population_imp < 0, Population_imp := NA_real_]
+
+  mort <- merge(mort, impute_grid[, .(fips, year, Population_imp)],
+                by = c("fips", "year"), all.x = TRUE)
+  mort[is.na(Population) & !is.na(Population_imp), Population := Population_imp]
+  mort[, Population_imp := NULL]
+
+  cat(sprintf("Population imputed for %d county-years (2018-2025)\n",
+              mort[year >= 2018 & !is.na(Population), .N]))
+
+  # Calculate death rate per 100k (substance use deaths)
+  mort[, outcome := Deaths / Population * 100000]
+
+  panel <- mort[!is.na(outcome) & Population > 0,
+                .(fips, year, total_pop = Population, outcome)]
+
+  outcome_label <- "Change in Substance Use Death Rate per 100k (ICD-F)"
+
+  cat(sprintf("Substance use mortality panel: %d county-year rows, %d counties, years %d-%d\n",
+              nrow(panel), uniqueN(panel$fips),
+              min(panel$year), max(panel$year)))
+
+  panel[, fips := sprintf(fips, fmt = "%05d")]
+
 } else {
-  stop("ANALYSIS_TYPE must be 'incarceration' or 'mortality'")
+  stop("ANALYSIS_TYPE must be 'incarceration', 'mortality', or 'mortality_f'")
 }
 
 # ========== 3. Merge and build event-study dataset ===========================
@@ -187,6 +278,8 @@ cat(sprintf("Merged: %d county-years, %d treated counties, %d control counties\n
 
 min_et <- -5L
 max_et <-  5L
+
+matching_dataset <- es[year == 2015]
 
 es <- es[(event_time >= min_et & event_time <= max_et) | is.na(event_time)]
 es <- es[year > 2012]
@@ -213,12 +306,16 @@ services_by_county <- tmp[, .(omh = sum(OMH), act = sum(ACT), cmhc = sum(CMHC),
         therapy = sum(CBT + DBT + IPT + GT), case_mgmt = sum(CM+ICM), crisis = sum(CIT + CFT + ES),
         residential = sum(OSF + SNR + TCC)), .(fips = county_fips)]
 
+matching_dataset <- merge(matching_dataset, services_by_county, by = 'fips', all.x = T)
+fill_cols <- c("omh", "act", "cmhc", "therapy", "case_mgmt", "crisis", "residential")
+matching_dataset[, (fill_cols) := lapply(.SD, function(x) fifelse(is.na(x), 0, x)), .SDcols = fill_cols]
+
 m <- MatchIt::matchit(
   treated ~ act + cmhc + omh + therapy + case_mgmt + crisis + residential,
-  data = merge(es[year == 2015], services_by_county, by = 'fips'),
+  data = matching_dataset,
   method = "nearest",
   distance = "logit",
-  ratio = 3
+  ratio = 2
   ### note: I can increase this ratio (more control counties) but that introduces pre-trends
 )
 
@@ -411,17 +508,6 @@ plot_event_study(
   sprintf("ccbhc_%s_rob_planning_states.png", ANALYSIS_TYPE)
 )
 
-# ========== Reprint Baseline with event time labels =================================
-
-
-  cat("\nBaseline event study coefficients:\n")
-  print(coef_baseline[, .(event_time,
-                    coef   = sprintf("%.3f", coefficient),
-                    se     = sprintf("%.3f", se),
-                    ci_95  = sprintf("[%.3f, %.3f]", ci_lower, ci_upper),
-                    signif = fifelse(abs(coefficient / se) > 2.576, "***",
-                             fifelse(abs(coefficient / se) > 1.96,  "**",
-                             fifelse(abs(coefficient / se) > 1.645, "*", ""))))])
 
 
 if (ANALYSIS_TYPE == "mortality") {
@@ -434,3 +520,19 @@ if (ANALYSIS_TYPE == "mortality") {
 cat("\n==========================================================\n")
 cat(sprintf("CCBHC grants DiD (%s) complete.\n", ANALYSIS_TYPE))
 cat("==========================================================\n")
+
+
+# ========== Reprint Baseline with event time labels =================================
+
+
+  cat("\nBaseline event study coefficients:\n")
+  print(coef_baseline[, .(event_time,
+                    coef   = sprintf("%.3f", coefficient),
+                    se     = sprintf("%.3f", se),
+                    ci_95  = sprintf("[%.3f, %.3f]", ci_lower, ci_upper),
+                    signif = fifelse(abs(coefficient / se) > 2.576, "***",
+                             fifelse(abs(coefficient / se) > 1.96,  "**",
+                             fifelse(abs(coefficient / se) > 1.645, "*", ""))))])
+
+cat("\nBaseline treatment year distribution:\n")
+print(unique(es_matched[, .(fips, treat_year)])[, table(treat_year, useNA = "ifany")])
