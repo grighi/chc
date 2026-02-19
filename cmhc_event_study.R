@@ -497,7 +497,7 @@ cat("==========================================================\n\n")
 fig4_data <- data %>%
   filter(!is.na(cmhc_year_exp)) %>%
   filter(year %in% c(1959, 1960)) %>%
-  select(fips, year, cmhc_year_exp, amr_ad, copop_ad, popwt_ad,
+  select(fips, year, cmhc_year_exp, amr_ad, copop_ad, popwt_ad, `_tot_act_md`,
          `_60pcturban`, `_60pctnonwhit`, `_pct59inclt3k`) %>%
   pivot_wider(names_from = year, values_from = c(amr_ad, copop_ad),
               names_sep = "_") %>%
@@ -585,9 +585,11 @@ fig4_resid <- fig4_data %>%
 
 if (nrow(fig4_resid) > 20) {
   # Residualize AMR level on controls
-  resid_y <- lm(amr_ad_level_1960 ~ `_60pcturban` + `_60pctnonwhit` + `_pct59inclt3k`,
+  resid_y <- lm(amr_ad_level_1960 ~ `_60pcturban` + `_tot_act_md`,
+    # amr_ad_level_1960 ~ `_60pcturban` + `_60pctnonwhit` + `_pct59inclt3k`,
                  data = fig4_resid, weights = popwt_ad)
-  resid_x <- lm(cmhc_year_exp ~ `_60pcturban` + `_60pctnonwhit` + `_pct59inclt3k`,
+  resid_x <- lm(cmhc_year_exp ~ `_60pcturban` + `_tot_act_md`,
+    # amr_ad_level_1960 ~ `_60pcturban` + `_60pctnonwhit` + `_pct59inclt3k`,
                  data = fig4_resid, weights = popwt_ad)
   fig4_resid$amr_resid <- residuals(resid_y)
   fig4_resid$year_resid <- residuals(resid_x) + resid_x$coef['(Intercept)']
@@ -885,6 +887,258 @@ cat("==========================================================\n")
 
 
 # ==========================================
+# STEP 12d: PLACEBO TEST — High-Priority Counties That Never Got a CMHC
+# ==========================================
+# If CMHC construction is driving the mortality decline, then counties
+# that were rated as high-priority but never received a CMHC should NOT
+# show the same decline. We assign them a pseudo-treatment year (median
+# CMHC opening = 1973) and run the same event-study specification.
+
+cat("\n\n##########################################################\n")
+cat("PLACEBO TEST: High-Priority Counties That Never Got a CMHC\n")
+cat("##########################################################\n\n")
+
+# Load priority ranks
+priority <- readr::read_csv("cmhc_data/priority_ranks_for_eventstudy.csv", show_col_types = FALSE)
+cat("Loaded priority data:", nrow(priority), "counties\n")
+cat("  High priority (top tercile):", sum(priority$high_priority == 1, na.rm = TRUE), "\n")
+cat("  High priority, no CMHC:", sum(priority$high_priority_no_cmhc == 1, na.rm = TRUE), "\n\n")
+
+# Median CMHC opening year among treated counties (for pseudo-treatment)
+median_cmhc_year <- median(cmhc_openings$cmhc_year_exp, na.rm = TRUE)
+cat("Median CMHC opening year (pseudo-treatment year):", median_cmhc_year, "\n\n")
+
+# Merge priority into the panel
+data_placebo <- data %>%
+  left_join(priority %>% select(fips, priority_pctile, priority_tercile,
+                                 high_priority, area_has_cmhc, high_priority_no_cmhc),
+            by = "fips")
+
+# Create placebo treatment:
+#   - "Treated" = counties in high-priority AREAS where NO county in the area
+#     got a CMHC (pseudo year = median)
+#   - "Control" = counties with no CMHC (neither direct nor via area)
+# Exclude all CMHC recipients AND counties in areas that got a CMHC
+# (since those counties were effectively treated through their area)
+
+data_placebo <- data_placebo %>%
+  filter(is.na(cmhc_year_exp)) %>%                      # Drop direct CMHC recipients
+  filter(is.na(area_has_cmhc) | area_has_cmhc == 0) %>%  # Also drop area-treated counties
+  mutate(
+    placebo_year = ifelse(high_priority_no_cmhc == 1, median_cmhc_year, NA_real_),
+    placebo_event_time = year - placebo_year,
+    placebo_et_binned = case_when(
+      is.na(placebo_event_time) ~ -999L,
+      placebo_event_time <= -6  ~ -6L,
+      placebo_event_time >= 20  ~ 20L,
+      TRUE ~ as.integer(placebo_event_time)
+    )
+  )
+
+cat("Placebo sample (area-based definition):\n")
+cat("  Total counties:", n_distinct(data_placebo$fips), "\n")
+cat("  Placebo-treated (high priority area, no CMHC in area):",
+    n_distinct(data_placebo$fips[data_placebo$high_priority_no_cmhc == 1]), "\n")
+cat("  Never-treated controls:",
+    n_distinct(data_placebo$fips[is.na(data_placebo$placebo_year)]), "\n")
+cat("  NOTE: Excludes all counties whose area received a CMHC (even if the\n")
+cat("         county itself did not directly host one).\n\n")
+
+# --- Run placebo event study: AMR (all ages) ---
+cat("-----------------------------------------------------------\n")
+cat("Placebo Event Study: AMR (All Ages)\n")
+cat("-----------------------------------------------------------\n\n")
+
+model_placebo <- feols(
+  amr ~ i(placebo_et_binned, ref = -1) + D_tot_act_md_t + H_bpc
+    + `_60pcturban` + `_pct59inclt3k` + `_60pctnonwhit` | fips + year^Durb + year^stfips,
+  data = data_placebo,
+  weights = ~popwt,
+  cluster = ~fips
+)
+
+print(summary(model_placebo))
+
+# Extract placebo coefficients
+coef_names_pl <- names(coef(model_placebo))
+pl_idx <- grepl("^placebo_et_binned::(-?[0-9]+)$", coef_names_pl)
+coef_df_placebo <- data.frame(
+  event_time = as.numeric(gsub("^placebo_et_binned::(-?[0-9]+)$", "\\1", coef_names_pl[pl_idx])),
+  coefficient = coef(model_placebo)[pl_idx],
+  se = sqrt(diag(vcov(model_placebo)))[pl_idx]
+) %>%
+  filter(event_time != -999 & event_time < 15)
+
+coef_df_placebo$ci_lower <- coef_df_placebo$coefficient - 1.96 * coef_df_placebo$se
+coef_df_placebo$ci_upper <- coef_df_placebo$coefficient + 1.96 * coef_df_placebo$se
+coef_df_placebo <- rbind(coef_df_placebo, data.frame(event_time = -1, coefficient = 0, se = 0,
+                                                      ci_lower = 0, ci_upper = 0))
+coef_df_placebo <- coef_df_placebo %>% arrange(event_time)
+
+# Pre/post tests for placebo
+cat("\n-----------------------------------------------------------\n")
+cat("Placebo Joint Significance Tests\n")
+cat("-----------------------------------------------------------\n")
+
+pre_pl <- paste0("placebo_et_binned::", -6:-2)
+pre_pl <- pre_pl[pre_pl %in% names(coef(model_placebo))]
+if (length(pre_pl) > 0) {
+  pre_test_pl <- wald(model_placebo, pre_pl)
+  cat("\nPre-trend test (t = -6 to -2):\n")
+  cat("  F-statistic:", pre_test_pl$stat, "\n")
+  cat("  p-value:", pre_test_pl$p, "\n")
+}
+
+post_pl <- paste0("^placebo_et_binned::", 0:14, "$")
+post_test_pl <- wald(model_placebo, post_pl)
+cat("\nPost-pseudo-treatment test (t = 0 to +14):\n")
+cat("  F-statistic:", post_test_pl$stat, "\n")
+cat("  p-value:", post_test_pl$p, "\n")
+
+# --- Run placebo event study: AMR (ages 20-49) ---
+cat("\n-----------------------------------------------------------\n")
+cat("Placebo Event Study: AMR (Ages 20-49)\n")
+cat("-----------------------------------------------------------\n\n")
+
+model_placebo_ad <- feols(
+  amr_ad ~ i(placebo_et_binned, ref = -1) + D_tot_act_md_t + H_bpc
+    + `_60pcturban` + `_pct59inclt3k` + `_60pctnonwhit` | fips + year^Durb + year^stfips,
+  data = data_placebo,
+  weights = ~popwt_ad,
+  cluster = ~fips
+)
+
+print(summary(model_placebo_ad))
+
+# Extract placebo adult coefficients
+coef_names_pla <- names(coef(model_placebo_ad))
+pla_idx <- grepl("^placebo_et_binned::(-?[0-9]+)$", coef_names_pla)
+coef_df_placebo_ad <- data.frame(
+  event_time = as.numeric(gsub("^placebo_et_binned::(-?[0-9]+)$", "\\1", coef_names_pla[pla_idx])),
+  coefficient = coef(model_placebo_ad)[pla_idx],
+  se = sqrt(diag(vcov(model_placebo_ad)))[pla_idx]
+) %>%
+  filter(event_time != -999 & event_time < 15)
+
+coef_df_placebo_ad$ci_lower <- coef_df_placebo_ad$coefficient - 1.96 * coef_df_placebo_ad$se
+coef_df_placebo_ad$ci_upper <- coef_df_placebo_ad$coefficient + 1.96 * coef_df_placebo_ad$se
+coef_df_placebo_ad <- rbind(coef_df_placebo_ad, data.frame(event_time = -1, coefficient = 0, se = 0,
+                                                            ci_lower = 0, ci_upper = 0))
+coef_df_placebo_ad <- coef_df_placebo_ad %>% arrange(event_time)
+
+# Save placebo coefficients
+write.csv(coef_df_placebo, "cmhc_event_study_placebo_amr.csv", row.names = FALSE)
+write.csv(coef_df_placebo_ad, "cmhc_event_study_placebo_amr_ad.csv", row.names = FALSE)
+cat("\nPlacebo coefficients saved.\n")
+
+# --- Plot: Placebo vs Actual Treatment Effect ---
+cat("\n-----------------------------------------------------------\n")
+cat("Generating Placebo Comparison Plots\n")
+cat("-----------------------------------------------------------\n")
+
+library(ggplot2)
+
+# All-ages comparison
+coef_compare_placebo <- bind_rows(
+  coef_df %>% mutate(model = "Actual CMHC Treatment"),
+  coef_df_placebo %>% mutate(model = "Placebo (High Priority, No CMHC)")
+)
+
+p_placebo_all <- ggplot(coef_compare_placebo, aes(x = event_time, y = coefficient,
+                                                    color = model, fill = model)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_vline(xintercept = -0.5, linetype = "dashed", color = "gray50") +
+  geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.12, color = NA) +
+  geom_point(size = 2, position = position_dodge(width = 0.4)) +
+  geom_line(linewidth = 0.8, position = position_dodge(width = 0.4)) +
+  scale_color_manual(values = c("Actual CMHC Treatment" = "steelblue",
+                                 "Placebo (High Priority, No CMHC)" = "firebrick")) +
+  scale_fill_manual(values = c("Actual CMHC Treatment" = "steelblue",
+                                "Placebo (High Priority, No CMHC)" = "firebrick")) +
+  labs(
+    title = "Placebo Test: Actual CMHC Effect vs. High-Priority Counties That Never Got a CMHC",
+    subtitle = "AMR (All Ages). Placebo counties assigned pseudo-treatment at median CMHC year (1973).",
+    x = "Years Relative to (Pseudo-)Treatment",
+    y = "Change in Deaths per 100,000",
+    color = NULL, fill = NULL
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", size = 11),
+    panel.grid.minor = element_blank(),
+    legend.position = "bottom"
+  )
+
+ggsave("cmhc_placebo_vs_actual_amr.png", p_placebo_all, width = 11, height = 6.5, dpi = 300)
+cat("Plot saved to: cmhc_placebo_vs_actual_amr.png\n")
+
+# Adult (20-49) comparison
+coef_compare_placebo_ad <- bind_rows(
+  coef_df_ad %>% mutate(model = "Actual CMHC Treatment"),
+  coef_df_placebo_ad %>% mutate(model = "Placebo (High Priority, No CMHC)")
+)
+
+p_placebo_ad <- ggplot(coef_compare_placebo_ad, aes(x = event_time, y = coefficient,
+                                                      color = model, fill = model)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_vline(xintercept = -0.5, linetype = "dashed", color = "gray50") +
+  geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.12, color = NA) +
+  geom_point(size = 2, position = position_dodge(width = 0.4)) +
+  geom_line(linewidth = 0.8, position = position_dodge(width = 0.4)) +
+  scale_color_manual(values = c("Actual CMHC Treatment" = "steelblue",
+                                 "Placebo (High Priority, No CMHC)" = "firebrick")) +
+  scale_fill_manual(values = c("Actual CMHC Treatment" = "steelblue",
+                                "Placebo (High Priority, No CMHC)" = "firebrick")) +
+  labs(
+    title = "Placebo Test: Actual CMHC Effect vs. High-Priority Counties (Ages 20\u201349)",
+    subtitle = "AMR (Ages 20-49). Placebo counties assigned pseudo-treatment at median CMHC year.",
+    x = "Years Relative to (Pseudo-)Treatment",
+    y = "Change in Deaths per 100,000",
+    color = NULL, fill = NULL
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", size = 11),
+    panel.grid.minor = element_blank(),
+    legend.position = "bottom"
+  )
+
+ggsave("cmhc_placebo_vs_actual_amr_ad.png", p_placebo_ad, width = 11, height = 6.5, dpi = 300)
+cat("Plot saved to: cmhc_placebo_vs_actual_amr_ad.png\n")
+
+# Standalone placebo plot (AMR 20-49)
+p_placebo_standalone <- ggplot(coef_df_placebo_ad, aes(x = event_time, y = coefficient)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_vline(xintercept = -0.5, linetype = "dashed", color = "gray50") +
+  geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), fill = "firebrick", alpha = 0.2) +
+  geom_point(color = "firebrick", size = 2) +
+  geom_line(color = "firebrick", linewidth = 0.8) +
+  labs(
+    title = "Placebo Test: High-Priority Counties That Never Received a CMHC",
+    subtitle = paste0("AMR (Ages 20\u201349). Pseudo-treatment at ", median_cmhc_year,
+                      ". N = ", n_distinct(data_placebo$fips[data_placebo$high_priority_no_cmhc == 1]),
+                      " placebo-treated counties."),
+    x = "Years Relative to Pseudo-Treatment",
+    y = "Change in Deaths per 100,000"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold"),
+    panel.grid.minor = element_blank()
+  )
+
+ggsave("cmhc_placebo_standalone_ad.png", p_placebo_standalone, width = 10, height = 6, dpi = 300)
+cat("Plot saved to: cmhc_placebo_standalone_ad.png\n")
+
+cat("\n==========================================================\n")
+cat("PLACEBO TEST COMPLETE\n")
+cat("==========================================================\n")
+cat("If CMHC construction is causal, the placebo (red) should show\n")
+cat("no post-treatment decline, while actual treatment (blue) does.\n")
+cat("==========================================================\n")
+
+
+# ==========================================
 # STEP 13: Crime Long-Difference Analysis (1970-1978)
 # ==========================================
 
@@ -910,14 +1164,18 @@ cat("Loading incarceration data...\n")
 
 incarceration <- fst::read_fst('incarceration_trends_county.fst')
 
-# Create jail rates
+# The .fst has pre-computed rates (quarterly): total_jail_pop_rate, black_incarceration_rate, etc.
+# Aggregate to annual means
 incarceration <- incarceration %>%
-  mutate(
-    jail_rate = total_jail_pop / total_pop_15to64,
-    bl_jail_rate = black_jail_pop / black_pop_15to64
+  group_by(fips, year) %>%
+  summarize(
+    jail_rate = mean(total_jail_pop_rate, na.rm = TRUE),
+    bl_jail_rate = mean(black_incarceration_rate, na.rm = TRUE),
+    jail_pop_per_capita = mean(jail_pop_per_capita, na.rm = TRUE),
+    .groups = "drop"
   ) %>%
-  select(fips, year, jail_rate, bl_jail_rate, total_jail_pop, black_jail_pop,
-         total_pop_15to64, black_pop_15to64, inc_rate, black_inc_rate)
+  mutate(across(c(jail_rate, bl_jail_rate, jail_pop_per_capita),
+                ~ifelse(is.nan(.), NA, .)))
 
 # Create balanced sample indicator: 1 if county has jail_rate for all years in data
 years_in_data <- 1965:1980
@@ -959,252 +1217,228 @@ cmhc_openings_full <- cmhc_all %>%
   summarize(cmhc_year_full = min(cmhc_year, na.rm = TRUE)) %>%
   ungroup()
 
-# Create long-difference dataset
-# Get 1970 data
+# Get 1970 baseline data (used for all long-difference windows)
 data_1970 <- data %>%
   filter(year == 1970) %>%
   select(fips, stfips, cofips, Durb,
-         jail_rate_1970 = inc_rate,
-         total_jail_pop_1970 = total_jail_pop,
-         total_pop_15to64_1970 = total_pop_15to64,
+         jail_rate_1970 = jail_rate,
          # Baseline controls
          `_60pcturban`, `_60pctrurf`, `_60pct04years`, `_60pctmt64years`,
          `_60pctnonwhit`, `_60pctmt12schl`, `_60pctlt4schl`,
          `_pct59inclt3k`, `_pct59incmt10k`, `_tot_act_md`,
          copop, popwt)
 
-# Get 1978 data
-data_1978 <- data %>%
-  filter(year == 1978) %>%
-  select(fips,
-         jail_rate_1978 = inc_rate,
-         total_jail_pop_1978 = total_jail_pop,
-         total_pop_15to64_1978 = total_pop_15to64)
+# ==========================================
+# Helper function: run long-difference for a given end year
+# ==========================================
 
-# Merge 1970 and 1978
-ld_data <- data_1970 %>%
-  inner_join(data_1978, by = "fips") %>%
-  left_join(cmhc_openings_full, by = "fips")
-
-# Compute log change in jail rate
-ld_data <- ld_data %>%
-  mutate(
-    log_jail_rate_1970 = log(jail_rate_1970),
-    log_jail_rate_1978 = log(jail_rate_1978),
-    delta_log_jail_rate = log_jail_rate_1978 - log_jail_rate_1970,
-    # Treatment: CMHC operating by 1978
-    cmhc = as.integer(!is.na(cmhc_year_full) & cmhc_year_full <= 1978)
+run_long_difference <- function(end_year, data_1970, incarceration, cmhc_openings_full) {
+  
+  cat(sprintf("\n###########################################################\n"))
+  cat(sprintf("  LONG DIFFERENCE: 1970 – %d\n", end_year))
+  cat(sprintf("###########################################################\n\n"))
+  
+  # Get end-year data from the incarceration panel directly
+  data_end <- incarceration %>%
+    filter(year == end_year) %>%
+    select(fips, jail_rate_end = jail_rate)
+  
+  # Merge 1970 and end year
+  ld_data <- data_1970 %>%
+    inner_join(data_end, by = "fips") %>%
+    left_join(cmhc_openings_full, by = "fips")
+  
+  # Compute log change in jail rate
+  ld_data <- ld_data %>%
+    mutate(
+      log_jail_rate_1970 = log(jail_rate_1970),
+      log_jail_rate_end  = log(jail_rate_end),
+      delta_log_jail_rate = log_jail_rate_end - log_jail_rate_1970,
+      # Treatment: CMHC operating by end year
+      cmhc = as.integer(!is.na(cmhc_year_full) & cmhc_year_full <= end_year),
+      log_pop_1960 = log(popwt)
+    )
+  
+  # Filter to valid outcomes
+  ld_data_valid <- ld_data %>%
+    filter(!is.na(delta_log_jail_rate) & is.finite(delta_log_jail_rate))
+  
+  cat(sprintf("Long-difference sample (1970-%d):\n", end_year))
+  cat("  Counties with valid Δlog(jail_rate):", nrow(ld_data_valid), "\n")
+  cat(sprintf("  Treated (CMHC by %d): %d\n", end_year, sum(ld_data_valid$cmhc == 1)))
+  cat("  Control:", sum(ld_data_valid$cmhc == 0), "\n\n")
+  
+  # Split by population
+  ld_data_valid_small <- ld_data_valid %>%
+    filter(log_pop_1960 < log(30000)) %>%
+    group_by(stfips) %>% filter(n() > 1) %>% ungroup()
+  
+  ld_data_valid_large <- ld_data_valid %>%
+    filter(log_pop_1960 > log(30000)) %>%
+    group_by(stfips) %>% filter(n() > 1) %>% ungroup()
+  
+  # Model 1: No controls (small counties)
+  model_ld1 <- lm(delta_log_jail_rate ~ cmhc, data = ld_data_valid_small)
+  robust_se1 <- sqrt(diag(vcovHC(model_ld1, type = "HC1")))
+  
+  # Model 2: With baseline controls (small counties)
+  model_ld2 <- lm(delta_log_jail_rate ~ cmhc + `_60pcturban` + `_60pctrurf` + 
+                    `_60pct04years` + `_60pctmt64years` + `_60pctnonwhit` + 
+                    `_60pctmt12schl` + `_60pctlt4schl` + `_pct59inclt3k` + 
+                    `_pct59incmt10k` + `_tot_act_md`,
+                  data = ld_data_valid_small)
+  robust_se2 <- sqrt(diag(vcovHC(model_ld2, type = "HC1")))
+  
+  # Model 3a: Controls + state FE, small counties, pop-weighted
+  model_ld3 <- lm(delta_log_jail_rate ~ cmhc + `_60pcturban` + `_60pctrurf` + 
+                    `_60pct04years` + `_60pctmt64years` + `_60pctnonwhit` + 
+                    `_60pctmt12schl` + `_60pctlt4schl` + `_pct59inclt3k` + 
+                    `_pct59incmt10k` + `_tot_act_md` + factor(stfips),
+                  weights = popwt, data = ld_data_valid_small)
+  robust_se3 <- sqrt(diag(vcovHC(model_ld3, type = "HC1")))
+  
+  # Model 3b: Controls + state FE, large counties, pop-weighted
+  model_ld3b <- lm(delta_log_jail_rate ~ cmhc + `_60pcturban` + `_60pctrurf` + 
+                     `_60pct04years` + `_60pctmt64years` + `_60pctnonwhit` + 
+                     `_60pctmt12schl` + `_60pctlt4schl` + `_pct59inclt3k` + 
+                     `_pct59incmt10k` + `_tot_act_md` + factor(stfips),
+                   weights = popwt, data = ld_data_valid_large)
+  robust_se3b <- sqrt(diag(vcovHC(model_ld3b, type = "HC1")))
+  
+  # Model 4: Interaction with log(pop)
+  model_4 <- feols(
+    delta_log_jail_rate ~ cmhc * log_pop_1960 + `_60pcturban` + `_60pctrurf` + 
+                    `_60pct04years` + `_60pctmt64years` + `_60pctnonwhit` + 
+                    `_60pctmt12schl` + `_60pctlt4schl` + `_pct59inclt3k` + 
+                    `_pct59incmt10k` + `_tot_act_md` | stfips,
+    data = ld_data_valid, weights = ~popwt, cluster = ~fips
   )
-
-# Filter to counties with valid outcome
-ld_data_valid <- ld_data %>%
-  filter(!is.na(delta_log_jail_rate) & is.finite(delta_log_jail_rate))
-
-cat("Long-difference sample:\n")
-cat("  Counties with valid Δlog(jail_rate):", nrow(ld_data_valid), "\n")
-cat("  Treated (CMHC by 1978):", sum(ld_data_valid$cmhc == 1), "\n")
-cat("  Control:", sum(ld_data_valid$cmhc == 0), "\n\n")
+  
+  # Extract model_4 statistics
+  coef_m4 <- coef(model_4)["cmhc"]
+  se_m4 <- sqrt(diag(vcov(model_4)))["cmhc"]
+  t_m4 <- coef_m4 / se_m4
+  p_m4 <- 2 * pt(-abs(t_m4), df = nrow(ld_data_valid) - length(coef(model_4)))
+  
+  # p-values
+  p1 <- 2 * pt(-abs(coef(model_ld1)["cmhc"]/robust_se1["cmhc"]), df = model_ld1$df.residual)
+  p2 <- 2 * pt(-abs(coef(model_ld2)["cmhc"]/robust_se2["cmhc"]), df = model_ld2$df.residual)
+  p3 <- 2 * pt(-abs(coef(model_ld3)["cmhc"]/robust_se3["cmhc"]), df = model_ld3$df.residual)
+  p3b <- 2 * pt(-abs(coef(model_ld3b)["cmhc"]/robust_se3b["cmhc"]), df = model_ld3b$df.residual)
+  
+  # Print table
+  label <- sprintf("CMHC exposure (1970-%02d)", end_year %% 100)
+  dep_label <- sprintf("Dependent Variable: Δlog(jail_rate) = log(jail_rate_%d) - log(jail_rate_1970)", end_year)
+  
+  cat("-----------------------------------------------------------\n")
+  cat("OLS Regression: Δlog(jail_rate) on CMHC exposure\n")
+  cat("-----------------------------------------------------------\n\n")
+  cat(dep_label, "\n\n")
+  
+  cat("                                    (1)         (2)         (3a)        (3b)        (4)\n")
+  cat("                                No Controls  Controls   Small+StateFE Large+StateFE Interaction\n")
+  cat("-----------------------------------------------------------------------------------------------\n")
+  cat(sprintf("%-32s%8.4f    %8.4f    %8.4f    %8.4f    %8.4f\n",
+              label,
+              coef(model_ld1)["cmhc"], coef(model_ld2)["cmhc"], coef(model_ld3)["cmhc"], 
+              coef(model_ld3b)["cmhc"], coef_m4))
+  cat(sprintf("  Robust SE                     (%6.4f)    (%6.4f)    (%6.4f)    (%6.4f)    (%6.4f)\n",
+              robust_se1["cmhc"], robust_se2["cmhc"], robust_se3["cmhc"], 
+              robust_se3b["cmhc"], se_m4))
+  cat(sprintf("  t-statistic                   %8.3f    %8.3f    %8.3f    %8.3f    %8.3f\n",
+              coef(model_ld1)["cmhc"]/robust_se1["cmhc"],
+              coef(model_ld2)["cmhc"]/robust_se2["cmhc"],
+              coef(model_ld3)["cmhc"]/robust_se3["cmhc"],
+              coef(model_ld3b)["cmhc"]/robust_se3b["cmhc"],
+              t_m4))
+  cat(sprintf("  p-value                       %8.4f    %8.4f    %8.4f    %8.4f    %8.4f\n", 
+              p1, p2, p3, p3b, p_m4))
+  cat("-----------------------------------------------------------------------------------------------\n")
+  cat(sprintf("N counties                      %8d    %8d    %8d    %8d    %8d\n",
+              nobs(model_ld1), nobs(model_ld2), nobs(model_ld3), 
+              nobs(model_ld3b), nobs(model_4)))
+  cat(sprintf("R-squared                       %8.4f    %8.4f    %8.4f    %8.4f    %8.4f\n",
+              summary(model_ld1)$r.squared, summary(model_ld2)$r.squared, 
+              summary(model_ld3)$r.squared, summary(model_ld3b)$r.squared,
+              r2(model_4, "r2")))
+  cat("-----------------------------------------------------------------------------------------------\n\n")
+  
+  # Return key results for summary table
+  data.frame(
+    end_year    = end_year,
+    window      = sprintf("1970-%d", end_year),
+    coef_noctr  = coef(model_ld1)["cmhc"],
+    se_noctr    = robust_se1["cmhc"],
+    p_noctr     = p1,
+    coef_ctr    = coef(model_ld2)["cmhc"],
+    se_ctr      = robust_se2["cmhc"],
+    p_ctr       = p2,
+    coef_small  = coef(model_ld3)["cmhc"],
+    se_small    = robust_se3["cmhc"],
+    p_small     = p3,
+    coef_large  = coef(model_ld3b)["cmhc"],
+    se_large    = robust_se3b["cmhc"],
+    p_large     = p3b,
+    coef_inter  = coef_m4,
+    se_inter    = se_m4,
+    p_inter     = p_m4,
+    n_small     = nobs(model_ld3),
+    n_large     = nobs(model_ld3b),
+    n_all       = nobs(model_4),
+    n_treated   = sum(ld_data_valid$cmhc == 1),
+    n_control   = sum(ld_data_valid$cmhc == 0),
+    row.names   = NULL
+  )
+}
 
 # ==========================================
-# Summary Statistics by Treatment Status
+# Run all long-difference windows
 # ==========================================
 
-cat("-----------------------------------------------------------\n")
-cat("Summary Statistics: Treated vs Control Counties\n")
-cat("-----------------------------------------------------------\n\n")
+end_years <- c(1978, 1983, 1988, 1993, 2000)
 
-summary_stats <- ld_data_valid %>%
-  group_by(cmhc) %>%
-  summarize(
-    n_counties = n(),
-    mean_delta_log_jail = mean(delta_log_jail_rate, na.rm = TRUE),
-    sd_delta_log_jail = sd(delta_log_jail_rate, na.rm = TRUE),
-    mean_jail_rate_1970 = mean(jail_rate_1970, na.rm = TRUE),
-    mean_jail_rate_1978 = mean(jail_rate_1978, na.rm = TRUE),
-    mean_pct_urban = mean(`_60pcturban`, na.rm = TRUE),
-    mean_pct_nonwhite = mean(`_60pctnonwhit`, na.rm = TRUE),
-    mean_pct_poverty = mean(`_pct59inclt3k`, na.rm = TRUE),
-    .groups = "drop"
-  ) %>%
-  mutate(group = ifelse(cmhc == 1, "Treated (CMHC by 1978)", "Control"))
+ld_results_list <- lapply(end_years, function(ey) {
+  run_long_difference(ey, data_1970, incarceration, cmhc_openings_full)
+})
 
-cat("                              Control     Treated\n")
-cat("-----------------------------------------------------------\n")
-cat(sprintf("N counties                    %7d     %7d\n", 
-            summary_stats$n_counties[summary_stats$cmhc == 0],
-            summary_stats$n_counties[summary_stats$cmhc == 1]))
-cat(sprintf("Mean Δlog(jail_rate)          %7.3f     %7.3f\n",
-            summary_stats$mean_delta_log_jail[summary_stats$cmhc == 0],
-            summary_stats$mean_delta_log_jail[summary_stats$cmhc == 1]))
-cat(sprintf("SD Δlog(jail_rate)            %7.3f     %7.3f\n",
-            summary_stats$sd_delta_log_jail[summary_stats$cmhc == 0],
-            summary_stats$sd_delta_log_jail[summary_stats$cmhc == 1]))
-cat(sprintf("Mean jail rate 1970           %7.4f     %7.4f\n",
-            summary_stats$mean_jail_rate_1970[summary_stats$cmhc == 0],
-            summary_stats$mean_jail_rate_1970[summary_stats$cmhc == 1]))
-cat(sprintf("Mean jail rate 1978           %7.4f     %7.4f\n",
-            summary_stats$mean_jail_rate_1978[summary_stats$cmhc == 0],
-            summary_stats$mean_jail_rate_1978[summary_stats$cmhc == 1]))
-cat(sprintf("Mean %% urban (1960)           %7.1f     %7.1f\n",
-            summary_stats$mean_pct_urban[summary_stats$cmhc == 0],
-            summary_stats$mean_pct_urban[summary_stats$cmhc == 1]))
-cat(sprintf("Mean %% nonwhite (1960)        %7.1f     %7.1f\n",
-            summary_stats$mean_pct_nonwhite[summary_stats$cmhc == 0],
-            summary_stats$mean_pct_nonwhite[summary_stats$cmhc == 1]))
-cat(sprintf("Mean %% poverty (1959)         %7.1f     %7.1f\n",
-            summary_stats$mean_pct_poverty[summary_stats$cmhc == 0],
-            summary_stats$mean_pct_poverty[summary_stats$cmhc == 1]))
-cat("\n")
+ld_results_all <- do.call(rbind, ld_results_list)
 
 # ==========================================
-# OLS Regression with Robust SEs
+# Summary comparison across windows
 # ==========================================
 
-ld_data_valid <- ld_data_valid %>%
-  mutate(log_total_pop_15to64_1970 = log(total_pop_15to64_1970))
+cat("\n\n===========================================================\n")
+cat("SUMMARY: CMHC Effect on Δlog(jail_rate) Across Time Windows\n")
+cat("===========================================================\n\n")
+cat("Preferred specification: Model 3a (controls + state FE, small counties, pop-weighted)\n\n")
 
-ld_data_valid_small <- ld_data_valid %>%
-  filter(log_total_pop_15to64_1970 < log(30000)) %>%
-  group_by(stfips) %>%
-  filter(n() > 1) %>%
-  ungroup()
+cat(sprintf("%-12s  %8s  %8s  %8s  %8s  %8s\n",
+            "Window", "Coef", "SE", "t", "p", "N"))
+cat("-------------------------------------------------------------------\n")
+for (i in 1:nrow(ld_results_all)) {
+  r <- ld_results_all[i, ]
+  t_val <- r$coef_small / r$se_small
+  cat(sprintf("%-12s  %8.4f  %8.4f  %8.3f  %8.4f  %8d\n",
+              r$window, r$coef_small, r$se_small, t_val, r$p_small, r$n_small))
+}
+cat("-------------------------------------------------------------------\n")
+cat("Robust (HC1) standard errors. Pop-weighted. Small counties only.\n\n")
 
-ld_data_valid_large <- ld_data_valid %>%
-  filter(log_total_pop_15to64_1970 > log(30000)) %>%
-  group_by(stfips) %>%
-  filter(n() > 1) %>%
-  ungroup()
+# Also show large-county results
+cat(sprintf("%-12s  %8s  %8s  %8s  %8s  %8s\n",
+            "Window", "Coef", "SE", "t", "p", "N"))
+cat("-------------------------------------------------------------------\n")
+for (i in 1:nrow(ld_results_all)) {
+  r <- ld_results_all[i, ]
+  t_val <- r$coef_large / r$se_large
+  cat(sprintf("%-12s  %8.4f  %8.4f  %8.3f  %8.4f  %8d\n",
+              r$window, r$coef_large, r$se_large, t_val, r$p_large, r$n_large))
+}
+cat("-------------------------------------------------------------------\n")
+cat("Large counties. Robust (HC1) standard errors. Pop-weighted.\n")
 
-
-# Model 1: No controls
-model_ld1 <- lm(delta_log_jail_rate ~ cmhc, 
-                # weights = popwt,
-                data = ld_data_valid_small)
-robust_se1 <- sqrt(diag(vcovHC(model_ld1, type = "HC1")))
-
-# Model 2: With baseline controls
-model_ld2 <- lm(delta_log_jail_rate ~ cmhc + `_60pcturban` + `_60pctrurf` + 
-                  `_60pct04years` + `_60pctmt64years` + `_60pctnonwhit` + 
-                  `_60pctmt12schl` + `_60pctlt4schl` + `_pct59inclt3k` + 
-                  `_pct59incmt10k` + `_tot_act_md`,
-                # weights = popwt,
-                data = ld_data_valid_small)
-robust_se2 <- sqrt(diag(vcovHC(model_ld2, type = "HC1")))
-
-# Model 3: With controls + state FE
-## consider adding: cmhc*log(total_pop_15to64_1970)
-model_ld3 <- lm(delta_log_jail_rate ~ cmhc + `_60pcturban` + `_60pctrurf` + 
-                  `_60pct04years` + `_60pctmt64years` + `_60pctnonwhit` + 
-                  `_60pctmt12schl` + `_60pctlt4schl` + `_pct59inclt3k` + 
-                  `_pct59incmt10k` + `_tot_act_md` + factor(stfips),
-                weights = popwt,
-                data = ld_data_valid_small)
-robust_se3 <- sqrt(diag(vcovHC(model_ld3, type = "HC1")))
-
-model_ld3b <- lm(delta_log_jail_rate ~ cmhc + `_60pcturban` + `_60pctrurf` + 
-                  `_60pct04years` + `_60pctmt64years` + `_60pctnonwhit` + 
-                  `_60pctmt12schl` + `_60pctlt4schl` + `_pct59inclt3k` + 
-                  `_pct59incmt10k` + `_tot_act_md` + factor(stfips),
-                weights = popwt,
-                data = ld_data_valid_large)
-robust_se3b <- sqrt(diag(vcovHC(model_ld3b, type = "HC1")))
-
-
-# Model 4: Interaction with log total population 15-64 in 1970
-model_4 <- feols(
-  delta_log_jail_rate ~ cmhc * log_total_pop_15to64_1970 + `_60pcturban` + `_60pctrurf` + 
-                  `_60pct04years` + `_60pctmt64years` + `_60pctnonwhit` + 
-                  `_60pctmt12schl` + `_60pctlt4schl` + `_pct59inclt3k` + 
-                  `_pct59incmt10k` + `_tot_act_md` | stfips,
-  data = ld_data_valid,
-  weights = ~popwt,
-  cluster = ~fips
-)
-marginaleffects::plot_slopes(model_4, variables = "cmhc", condition = "log_total_pop_15to64_1970")
-
-# Full coefficient table for Model 3
-cat("\n-----------------------------------------------------------\n")
-cat("Full Coefficient Table (Model 3a) except stfips FEs\n")
-cat("-----------------------------------------------------------\n\n")
-
-coef_table_ld <- data.frame(
-  Variable = names(coef(model_ld3)),
-  Coefficient = coef(model_ld3),
-  Robust_SE = robust_se3,
-  t_value = coef(model_ld3) / robust_se3,
-  p_value = 2 * pt(-abs(coef(model_ld3) / robust_se3), df = model_ld3$df.residual)
-) %>% filter(!grepl("stfips", rownames(.)))
-
-coef_table_ld$Signif <- case_when(
-  coef_table_ld$p_value < 0.01 ~ "***",
-  coef_table_ld$p_value < 0.05 ~ "**",
-  coef_table_ld$p_value < 0.10 ~ "*",
-  TRUE ~ ""
-)
-rownames(coef_table_ld) <- NULL
-
-# Rename cmhc for clarity
-coef_table_ld$Variable[coef_table_ld$Variable == "cmhc"] <- "CMHC exposure (1970-78)"
-
-print(coef_table_ld, digits = 4)
-
-
-cat("\n\n-----------------------------------------------------------\n")
-cat("OLS Regression: Δlog(jail_rate) on CMHC exposure\n")
-cat("-----------------------------------------------------------\n\n")
-cat("Dependent Variable: Δlog(jail_rate) = log(jail_rate_1978) - log(jail_rate_1970)\n\n")
-
-# Extract model_4 statistics
-coef_m4 <- coef(model_4)["cmhc"]
-se_m4 <- sqrt(diag(vcov(model_4)))["cmhc"]
-t_m4 <- coef_m4 / se_m4
-p_m4 <- 2 * pt(-abs(t_m4), df = nrow(ld_data_valid) - length(coef(model_4)))
-
-cat("                                    (1)         (2)         (3a)        (3b)        (4)\n")
-cat("                                No Controls  Controls   Small+StateFE Large+StateFE Interaction\n")
-cat("-----------------------------------------------------------------------------------------------\n")
-cat(sprintf("CMHC exposure (1970-78)         %8.4f    %8.4f    %8.4f    %8.4f    %8.4f\n",
-            coef(model_ld1)["cmhc"], coef(model_ld2)["cmhc"], coef(model_ld3)["cmhc"], 
-            coef(model_ld3b)["cmhc"], coef_m4))
-cat(sprintf("  Robust SE                     (%6.4f)    (%6.4f)    (%6.4f)    (%6.4f)    (%6.4f)\n",
-            robust_se1["cmhc"], robust_se2["cmhc"], robust_se3["cmhc"], 
-            robust_se3b["cmhc"], se_m4))
-cat(sprintf("  t-statistic                   %8.3f    %8.3f    %8.3f    %8.3f    %8.3f\n",
-            coef(model_ld1)["cmhc"]/robust_se1["cmhc"],
-            coef(model_ld2)["cmhc"]/robust_se2["cmhc"],
-            coef(model_ld3)["cmhc"]/robust_se3["cmhc"],
-            coef(model_ld3b)["cmhc"]/robust_se3b["cmhc"],
-            t_m4))
-
-# p-values
-p1 <- 2 * pt(-abs(coef(model_ld1)["cmhc"]/robust_se1["cmhc"]), df = model_ld1$df.residual)
-p2 <- 2 * pt(-abs(coef(model_ld2)["cmhc"]/robust_se2["cmhc"]), df = model_ld2$df.residual)
-p3 <- 2 * pt(-abs(coef(model_ld3)["cmhc"]/robust_se3["cmhc"]), df = model_ld3$df.residual)
-p3b <- 2 * pt(-abs(coef(model_ld3b)["cmhc"]/robust_se3b["cmhc"]), df = model_ld3b$df.residual)
-
-cat(sprintf("  p-value                       %8.4f    %8.4f    %8.4f    %8.4f    %8.4f\n", 
-            p1, p2, p3, p3b, p_m4))
-cat("-----------------------------------------------------------------------------------------------\n")
-cat(sprintf("Baseline controls                   No          Yes         Yes         Yes         Yes\n"))
-cat(sprintf("State fixed effects                 No          No          Yes         Yes         Yes\n"))
-cat(sprintf("CMHC x log(pop) interaction         No          No          No          No          Yes\n"))
-cat(sprintf("Sample                              All         All         Small       Large       All\n"))
-cat(sprintf("N counties                      %8d    %8d    %8d    %8d    %8d\n",
-            nobs(model_ld1), nobs(model_ld2), nobs(model_ld3), 
-            nobs(model_ld3b), nobs(model_4)))
-cat(sprintf("R-squared                       %8.4f    %8.4f    %8.4f    %8.4f    %8.4f\n",
-            summary(model_ld1)$r.squared, summary(model_ld2)$r.squared, 
-            summary(model_ld3)$r.squared, summary(model_ld3b)$r.squared,
-            r2(model_4, "r2")))
-cat("-----------------------------------------------------------------------------------------------\n")
-cat("Robust/clustered standard errors in parentheses\n")
-cat("Small: log(pop_15to64_1970) < log(30000); Large: log(pop_15to64_1970) > log(30000)\n")
-cat("Model (4): CMHC effect varies with county population (interaction term)\n")
-cat("* p<0.10, ** p<0.05, *** p<0.01\n")
-
-
-# Save results
-write.csv(coef_table_ld, "cmhc_long_difference_results.csv", row.names = FALSE)
+# Save combined results
+write.csv(ld_results_all, "cmhc_long_difference_results.csv", row.names = FALSE)
 cat("\nLong-difference results saved to: cmhc_long_difference_results.csv\n")
 
 
@@ -1217,6 +1451,37 @@ cat("\nLong-difference results saved to: cmhc_long_difference_results.csv\n")
 cat("\n\n##########################################################\n")
 cat("ROBUSTNESS: Long-Difference with CHC Controls\n")
 cat("##########################################################\n\n")
+
+# Rebuild 1978 long-difference data for Step 14 (since Step 13 now uses a function)
+data_1978_chc <- incarceration %>%
+  filter(year == 1978) %>%
+  select(fips, jail_rate_1978 = jail_rate)
+
+ld_data <- data_1970 %>%
+  inner_join(data_1978_chc, by = "fips") %>%
+  left_join(cmhc_openings_full, by = "fips") %>%
+  mutate(
+    log_jail_rate_1970 = log(jail_rate_1970),
+    log_jail_rate_1978 = log(jail_rate_1978),
+    delta_log_jail_rate = log_jail_rate_1978 - log_jail_rate_1970,
+    cmhc = as.integer(!is.na(cmhc_year_full) & cmhc_year_full <= 1978),
+    log_pop_1960 = log(popwt)
+  )
+
+ld_data_valid <- ld_data %>%
+  filter(!is.na(delta_log_jail_rate) & is.finite(delta_log_jail_rate))
+
+# Baseline model 3a for comparison
+ld_data_valid_small <- ld_data_valid %>%
+  filter(log_pop_1960 < log(30000)) %>%
+  group_by(stfips) %>% filter(n() > 1) %>% ungroup()
+
+model_ld3 <- lm(delta_log_jail_rate ~ cmhc + `_60pcturban` + `_60pctrurf` +
+                  `_60pct04years` + `_60pctmt64years` + `_60pctnonwhit` +
+                  `_60pctmt12schl` + `_60pctlt4schl` + `_pct59inclt3k` +
+                  `_pct59incmt10k` + `_tot_act_md` + factor(stfips),
+                weights = popwt, data = ld_data_valid_small)
+robust_se3 <- sqrt(diag(vcovHC(model_ld3, type = "HC1")))
 
 # Add CHC indicator to long-difference data
 # chc_year_exp is in the original data; get cross-sectional version
@@ -1253,7 +1518,7 @@ cat("  Counties with both CMHC and CHC by 1978:",
 
 # Re-create subsamples with CHC variables
 ld_data_valid_small <- ld_data_valid %>%
-  filter(log_total_pop_15to64_1970 < log(30000)) %>%
+  filter(log_pop_1960 < log(30000)) %>%
   group_by(stfips) %>%
   filter(n() > 1) %>%
   ungroup()

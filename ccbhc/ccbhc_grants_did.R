@@ -16,11 +16,11 @@ library(ggplot2)
 
 # ===== PARAMETERS ============================================================
 
-ANALYSIS_TYPE <- "mortality_f"
+ANALYSIS_TYPE <- "incarceration"
 
 weighting      <- TRUE
-matching       <- FALSE
-balanced_panel <- TRUE
+matching       <- TRUE
+balanced_panel <- FALSE
 
 # if (ANALYSIS_TYPE == "incarceration") {
 # } else if (ANALYSIS_TYPE == "mortality") {
@@ -86,8 +86,8 @@ if (ANALYSIS_TYPE == "incarceration") {
   # Average across quarters within county-year
   panel <- inc[, .(total_pop = mean(total_pop, na.rm = TRUE),
                   outcome   = log(mean(jail_pop_per_capita, na.rm = TRUE))),
-                  # outcome   =     mean(total_jail_pop_rate, na.rm = TRUE)),    # pretrends!
                   # outcome   = log(mean(total_jail_pop_rate, na.rm = TRUE))),
+                  # outcome   =     mean(total_jail_pop_rate, na.rm = TRUE)),    # pretrends!
                   # outcome   =  mean(jail_sentenced_rate, na.rm = TRUE)),
                by = .(fips, year)]
   panel <- panel[!is.na(outcome)]
