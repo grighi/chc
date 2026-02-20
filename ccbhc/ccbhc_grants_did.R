@@ -85,8 +85,8 @@ if (ANALYSIS_TYPE == "incarceration") {
 
   # Average across quarters within county-year
   panel <- inc[, .(total_pop = mean(total_pop, na.rm = TRUE),
-                  outcome   = log(mean(jail_pop_per_capita, na.rm = TRUE))),
-                  # outcome   = log(mean(total_jail_pop_rate, na.rm = TRUE))),
+                  # outcome   = log(mean(jail_pop_per_capita, na.rm = TRUE))),
+                  outcome   = log(mean(total_jail_pop_rate, na.rm = TRUE))),
                   # outcome   =     mean(total_jail_pop_rate, na.rm = TRUE)),    # pretrends!
                   # outcome   =  mean(jail_sentenced_rate, na.rm = TRUE)),
                by = .(fips, year)]

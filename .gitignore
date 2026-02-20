@@ -3,4 +3,5 @@
 **png
 **directory_*txt
 **pdf
-**rdss
+**rdss**.parquet
+**.parquet
