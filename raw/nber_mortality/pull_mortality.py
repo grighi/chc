@@ -34,6 +34,14 @@ ICD reference (for downstream use)
   All external  ICD-9  E800-E999       ICD-10  V01-Y98
 """
 
+
+import warnings
+warnings.warn(
+    "Year 1969 appears to be incorrect. Check raw mortality file coding (datayear vs calendar year).",
+    UserWarning
+)
+    
+import argparse
 import concurrent.futures
 import io
 import sys
@@ -48,7 +56,7 @@ import requests
 
 # ── Configuration ──────────────────────────────────────────────────────────────
 
-OUT_PARQUET  = Path("nber_mortality_counts.parquet")
+OUT_PARQUET  = Path("nber_mortality_counts_2.parquet")
 
 YEARS        = range(1959, 2022)   # inclusive on both ends
 TIMEOUT_HEAD = 15                  # seconds for HEAD requests
@@ -168,6 +176,17 @@ def _download_to_buffer(url: str) -> io.BytesIO:
     return io.BytesIO(raw)
 
 
+def _read_csv_robust(buf: io.BytesIO, **kwargs) -> pd.DataFrame:
+    """Read CSV from a BytesIO buffer, falling back to latin-1 on UnicodeDecodeError."""
+    pos = buf.tell()
+    try:
+        return pd.read_csv(buf, encoding="utf-8", **kwargs)
+    except UnicodeDecodeError:
+        _log("  NOTE: utf-8 decode failed — retrying with latin-1")
+        buf.seek(pos)
+        return pd.read_csv(buf, encoding="latin-1", **kwargs)
+
+
 def aggregate_year(year: int, url: str) -> pd.DataFrame | None:
     """
     Download one year of NBER mortality data, keep needed columns, bin age,
@@ -186,7 +205,7 @@ def aggregate_year(year: int, url: str) -> pd.DataFrame | None:
     buf = _download_to_buffer(url)
 
     # Peek at available columns (case-insensitive match)
-    header = pd.read_csv(buf, nrows=0, dtype=str)
+    header = _read_csv_robust(buf, nrows=0, dtype=str)
     available_lower = {c.lower(): c for c in header.columns}
     buf.seek(0)
 
@@ -203,7 +222,7 @@ def aggregate_year(year: int, url: str) -> pd.DataFrame | None:
             return None
 
     # Read only the columns we need
-    df = pd.read_csv(buf, usecols=list(present.values()), dtype=str, low_memory=False)
+    df = _read_csv_robust(buf, usecols=list(present.values()), dtype=str, low_memory=False)
     _log(f"  {year}: done  rows={len(df):,}")
 
     # Rename to canonical names
@@ -237,11 +256,19 @@ def aggregate_year(year: int, url: str) -> pd.DataFrame | None:
 # ── Main ───────────────────────────────────────────────────────────────────────
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description="Download and aggregate NBER mortality data.")
+    parser.add_argument("start_year", nargs="?", type=int, default=1959,
+                        help="First year to download (default: 1959)")
+    parser.add_argument("end_year",   nargs="?", type=int, default=2021,
+                        help="Last year to download, inclusive (default: 2021)")
+    args = parser.parse_args()
+    years = range(args.start_year, args.end_year + 1)
+
     # ── Phase 1: parallel HEAD scan ───────────────────────────────────────────
-    print(f"Scanning NBER for available files ({MAX_WORKERS} parallel HEAD requests) …")
+    print(f"Scanning NBER for years {args.start_year}–{args.end_year} ({MAX_WORKERS} parallel HEAD requests) …")
     urls: dict[int, str] = {}
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as pool:
-        future_to_year = {pool.submit(find_mort_url, yr): yr for yr in YEARS}
+        future_to_year = {pool.submit(find_mort_url, yr): yr for yr in years}
         for fut in concurrent.futures.as_completed(future_to_year):
             yr = future_to_year[fut]
             try:

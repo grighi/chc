@@ -1,0 +1,110 @@
+BUDGET-1996:–500                                      Program and Financing (in thousands of dollars)
+BUDGET-1996:Identification code 75–1362–0–1–550                                                          1994 actual          1995 est.          1996 est.
+BUDGET-1996:6
+BUDGET-1996:2                Program by activities:
+BUDGET-1996:Direct program:
+BUDGET-1996:00.02      Mental health ............................................................           139,176       163,711             164,049
+BUDGET-1996:00.03      Substance abuse prevention .....................................                     253,469       238,559             216,080
+BUDGET-1996:00.04      Substance abuse treatment ......................................                     240,102       222,405             236,694
+BUDGET-1996:00.05      Mental health block grant to States ........................                         290,237       275,420             275,420
+BUDGET-1996:00.06      Substance abuse block grant to States ...................                          1,164,741 1,234,107 1,294,107
+BUDGET-1996:00.07      Program management ...............................................                    61,152         61,128              61,042
+BUDGET-1996:00.08      Buildings and facilities .............................................                   158 ................... ...................
+BUDGET-1996:00.91           Total direct program .............................................            2,149,035          2,195,330          2,247,392
+BUDGET-1996:01.01      Reimbursable program ..................................................               59,482             65,946             65,386
+BUDGET-1996:st.        10.00          Total obligations ........................................................     2,208,517          2,261,276          2,312,778
+BUDGET-1997:Identification code 75–1362–0–1–550                                                                1995 actual          1996 est.          1997
+BUDGET-1997:Obligations by program activity:
+BUDGET-1997:00.01     Mental health and substance abuse activities ............                                          588               223
+BUDGET-1997:00.02     Mental health partnership .............................................                            305               275
+BUDGET-1997:00.03     Substance abuse partnership ........................................                             1,241             1,234
+BUDGET-1997:00.04     Program management ...................................................                              61                57
+BUDGET-1997:00.91         Total direct program .................................................                       2,195             1,789
+BUDGET-1997:01.01       Reimbursable program ..................................................                           19                20
+BUDGET-1997:10.00           Total obligations ........................................................                 2,214             1,809
+BUDGET-1998:Program and Financing (in millions of dollars)
+BUDGET-1998:Identification code 75–1362–0–1–550                                                         1996 actual       1997 est.          1998 est.
+BUDGET-1998:Obligations by program activity:
+BUDGET-1998:00.01  Mental health and substance abuse activities ............                                   320             494                  505
+BUDGET-1998:00.02  Mental health partnership .............................................                     275             275                  275
+BUDGET-1998:00.03  Substance abuse partnership ........................................                     1,234           1,310                 1,320
+BUDGET-1998:00.04  Substance abuse partnership—temporary supplement
+BUDGET-1998:(mandatory) ............................................................... ...................            50                   50
+BUDGET-1998:00.05 Program management ...................................................                         56              55                   55
+BUDGET-1998:00.06 Building and facilities ................................................... ................... ...................                  1
+BUDGET-1998:00.91        Total direct program .................................................              1,885              2,184             2,206
+BUDGET-1998:01.01      Reimbursable program ..................................................                  20                 20                20
+BUDGET-1998:10.00          Total obligations ........................................................        1,905              2,204             2,226
+BUDGET-1999:Program and Financing (in millions of dollars)
+BUDGET-1999:Identification code 75–1362–0–1–550                                                          1997 actual       1998 est.          1999 est.
+BUDGET-1999:Obligations by program activity:
+BUDGET-1999:Direct program:
+BUDGET-1999:00.01      Mental health and substance abuse activities ........                                    506               507                442
+BUDGET-1999:00.02      Mental health partnership ........................................                       275               275                275
+BUDGET-1999:00.03      Substance abuse partnership ...................................                        1,310             1,310              1,510
+BUDGET-1999:00.04      Substance abuse partnership temporary supple-
+BUDGET-1999:ment (mandatory) .................................................                     50                50 ...................
+BUDGET-1999:00.05      Program management ...............................................                         54                55                53
+BUDGET-1999:00.91         Total, direct program ................................................              2,195             2,197              2,280
+BUDGET-1999:09.01      Reimbursable program ..................................................                   22                22                 22
+BUDGET-1999:10.00         Total obligations ........................................................          2,217             2,219              2,302
+BUDGET-2000:Program and Financing (in millions of dollars)
+BUDGET-2000:Identification code 75–1362–0–1–551                                                             1998 actual       1999 est.          2000 est.
+BUDGET-2000:Obligations by program activity:
+BUDGET-2000:Direct program:
+BUDGET-2000:00.01      Mental health and substance abuse activities ........                                       504                561                595
+BUDGET-2000:00.02      Mental health partnership ........................................                          275                289                359
+BUDGET-2000:00.03      Substance abuse partnership ...................................                           1,310              1,585              1,615
+BUDGET-2000:00.04      Substance abuse partnership temporary supple-
+BUDGET-2000:ment (mandatory) .................................................                        50 ................... ...................
+BUDGET-2000:00.05      Program management ...............................................                            55                53                  58
+BUDGET-2000:0 est.         09.01 Reimbursable program ..................................................                            20                22                  22
+BUDGET-2000:10.00           Total new obligations ................................................               2,214              2,510              2,649
+BUDGET-2001:Obligations by program activity:
+BUDGET-2001:Direct program:
+BUDGET-2001:00.01      Mental health and substance abuse activities ........                                    556                637               716
+BUDGET-2001:00.02      Mental health partnership ........................................                       289                356               416
+BUDGET-2001:00.03      Substance abuse partnership ...................................                        1,585              1,600             1,631
+BUDGET-2001:00.05      Program management ...............................................                        56                 59                60
+BUDGET-2001:09.01 Reimbursable program ..................................................                        33                 40                40
+BUDGET-2001:10.00          Total new obligations ................................................             2,519              2,692             2,863
+BUDGET-2001:Budgetary resources available for obligation:
+BUDGET-2001:22.00     New budget authority (gross) ........................................                 2,520         2,692               2,863
+BUDGET-2001:23.95     Total new obligations ....................................................           ¥2,519     ¥2,692              ¥2,863
+BUDGET-2002:Identification code 75–1362–0–1–551                                                             2000 actual      2001 est.        2002 est.
+BUDGET-2002:Obligations by program activity:
+BUDGET-2002:Direct program:
+BUDGET-2002:00.01      Mental health and substance abuse activities ........                                       635              793              817
+BUDGET-2002:00.02      Mental health partnership ........................................                          356              420              420
+BUDGET-2002:00.03      Substance abuse partnership ...................................                           1,600            1,665            1,725
+BUDGET-2002:00.05      Program management ...............................................                           59               79               67
+BUDGET-2002:09.01 Reimbursable program ..................................................                           32               40               69
+BUDGET-2002:10.00           Total new obligations ................................................               2,682            2,997            3,098
+BUDGET-2002:Budgetary resources available for obligation:
+BUDGET-2002:22.00     New budget authority (gross) ........................................                    2,684         2,997               3,098
+BUDGET-2003:Identification code 75–1362–0–1–551                                                              2001 actual       2002 est.          2003 es
+BUDGET-2003:Obligations by program activity:
+BUDGET-2003:Direct program:
+BUDGET-2003:00.01      Mental health and substance abuse activities ........                                        793                889
+BUDGET-2003:00.02      Mental health partnership ........................................                           420                433
+BUDGET-2003:00.03      Substance abuse partnership ...................................                            1,665              1,725              1
+BUDGET-2003:00.05      Program management ...............................................                            83                 95
+BUDGET-2003:09.01 Reimbursable program ..................................................                            24                 36
+BUDGET-2003:10.00           Total new obligations ................................................                2,985              3,178              3
+BUDGET-2003:Budgetary resources available for obligation:
+BUDGET-2003:21.40     Unobligated balance carried forward, start of year ...................                                             7
+BUDGET-2003:22.00     New budget authority (gross) ........................................ 2,992                                    3,178              3
+BUDGET-2003:23.90          Total budgetary resources available for obligation                                   2,992         3,185               3,241
+BUDGET-2004:Identification code 75–1362–0–1–551                                                      2002 actual       2003 est.          2004 est.
+BUDGET-2004:Obligations by program activity:
+BUDGET-2004:Direct program:
+BUDGET-2004:00.01      Mental health and substance abuse activities ........                                884               900               1,106
+BUDGET-2004:00.02      Mental health partnership ........................................                   433               433                 433
+BUDGET-2004:00.03      Substance abuse partnership ...................................                    1,725             1,785               1,785
+BUDGET-2004:00.05      Program management ...............................................                    91                77                  69
+BUDGET-2004:09.01 Reimbursable program ..................................................                    73                75                  75
+BUDGET-2004:10.00          Total new obligations ................................................         3,206             3,270               3,468
+BUDGET-2004:Budgetary resources available for obligation:
+BUDGET-2004:21.40     Unobligated balance carried forward, start of year                                      7                 6                   6
+BUDGET-2004:22.00     New budget authority (gross) ........................................               3,209             3,270               3,468
+BUDGET-2004:6     Identification code 75–1700–0–1–552                                                             2002 actual      2003 est.           2004 est.

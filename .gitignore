@@ -1,9 +1,11 @@
+**~
 **Directory.txt
 **.csv
 **png
 **directory_*txt
 **pdf
-**rdss**.parquet
+**.rds
+**.parquet
 **.parquet
 .wonder_session.json
 **.DS_Store
