@@ -1,0 +1,345 @@
+================================================================================
+REPLICATION SPEC: Avery & LaVoice (2023)
+"The Effect of 'Failed' Community Mental Health Centers on Non-White Mortality"
+Health Economics, 32(6), 1362-1393
+================================================================================
+
+1. DATA SOURCES
+================================================================================
+
+A. CMHC Locations (Treatment Variable)
+   - Source: Mental Health Directories & Directories of Federally Funded 
+     Community Mental Health Centers
+   - Hand-digitized from published directories
+   - Published every other year: 1971, 1973, 1975, 1977, 1979, 1981
+   - Unit: county-level; records first year a CMHC appeared in each county
+   - 531 counties ever received a CMHC; 2503 never did
+
+B. State Priority Rankings
+   - Source: State Mental Health Planning Reports (National Archives, MD)
+   - Available for 29 states that defined catchment areas using county borders
+   - States: AL, AR, DE, FL, ID, IN, KS, LA, MD, MS, MO, MT, NE, NJ, NM, 
+     NY, NC, OH, OK, SC, SD, TN, TX, UT, VT, VA, WA, WV, WI
+   - Contains: catchment area definitions, priority rankings by need
+
+C. Mortality Data (Outcome Variables)
+   - Source: Multiple Cause of Death Vital Statistics, National Center for 
+     Health Statistics
+   - Universe of civilian deaths by cause, age, race, sex, county of residence
+   - Years: 1969-1988
+   - ICD codes used:
+       Suicide:              ICD-8 E950-959 / ICD-9 E950-959
+       Accidental gun death: ICD-8 E922     / ICD-9 E922
+       Homicide:             ICD-8 E960-969 / ICD-9 E960-969
+       Alcohol deaths:       ICD-8 303      / ICD-9 303
+       Alt alcohol (robust): ICD-8 571.0, 155.0 / ICD-9 571.0-571.3, 155.0
+
+D. Population Data
+   - Source: Surveillance, Epidemiology, and End Results (SEER) Program
+   - Annual county population estimates by age, race, sex
+   - Years: 1969-1988
+   - Race categories: white, black, other
+
+E. County Covariates
+   - Source: 1970 Decennial Census
+   - Variables: % less than HS education, % HS education, % college,
+     unemployment rate, labor force participation rate, number of medical 
+     workers, population, % white, % urban
+
+F. Community Health Centers (CHC) — for robustness
+   - Source: Bailey & Goodman-Bacon (2015)
+   - County-level indicator for whether county received a CHC grant by year t
+
+
+2. DATA CONSTRUCTION
+================================================================================
+
+A. Treatment Variable
+   CMHC_ct = 1 if county c has a CMHC by year t, 0 otherwise
+   - Constructed from biennial directories; linearly interpolated for 
+     off-years (directories published 1971, 1973, 1975, 1977, 1979, 1981)
+   - Once a county gets a CMHC, it stays treated (absorbing treatment)
+
+B. Outcome Variables
+   For each county c, year t, demographic subgroup g:
+     y_cst = age-adjusted death count
+   
+   Pseudocode:
+     FOR each county c, year t:
+       FOR each cause in {suicide, homicide, alcohol}:
+         FOR each subgroup in {total, white, nonwhite, 
+                               nonwhite male, nonwhite female, 
+                               white male, white female,
+                               nonwhite age 15-24, nonwhite age 25-44, 
+                               nonwhite age 45-64, nonwhite age 65+,
+                               white age 15-24, white age 25-44, 
+                               white age 45-64, white age 65+}:
+           count deaths matching ICD codes, subgroup demographics
+           compute age-adjusted count using SEER population weights
+
+C. Controls Vector X_ct
+   Each control is the 1970 census value interacted with a linear time trend:
+     - pct_less_than_HS_1970 * t
+     - pct_HS_1970 * t
+     - unemployment_rate_1970 * t
+     - labor_force_participation_1970 * t
+     - num_medical_workers_1970 * t
+   Plus: year × urban-category fixed effects
+     urban_category = quintile of county's 1970 share of urban residents
+
+D. Event Study Data
+   - Aggregate data into 2-year bins relative to treatment year T*_c
+   - Bins: [-8,-7], [-6,-5], [-4,-3], [-2,-1](omitted), [0,1], [2,3], 
+     [4,5], [6,7], [8,9], [10,11], [12,13]
+
+E. Priority Ranking Data
+   - Normalize priority rankings to z-scores within each state
+   - Higher z-score = greater stated need for mental health services
+
+
+3. MAIN ESTIMATING EQUATIONS
+================================================================================
+
+------------------------------------------------------------------------
+EQUATION 1: Static Two-Way Fixed Effects Poisson
+------------------------------------------------------------------------
+
+Model:
+
+  E[y_cst | CMHC_ct, theta_c, gamma_t, lambda_s*t, X_ct] = 
+    exp( alpha 
+         + beta * CMHC_ct 
+         + ln(population_ct)    [coefficient restricted to 1, i.e., offset]
+         + theta_c              [county FE]
+         + gamma_t              [year FE]
+         + lambda_s * t         [state-specific linear time trend]
+         + xi * X_ct            [controls vector]
+         + epsilon_cst )
+
+Pseudocode:
+
+  FOR each outcome in {suicide_count, homicide_count, alcohol_count}:
+    FOR each subgroup in {total, white, nonwhite, ...}:
+      
+      data = panel of county-year observations, 1969-1988
+      
+      ESTIMATE Poisson regression:
+        depvar    = age_adjusted_death_count[subgroup]
+        offset    = ln(population[subgroup])
+        treatment = CMHC_ct  (binary, absorbing)
+        FE        = county_FE + year_FE
+        trends    = state_id * year
+        controls  = {pct_ltHS*t, pct_HS*t, unemp*t, lfpr*t, med_workers*t,
+                     year × urban_quintile_FE}
+        weights   = county population for relevant subgroup
+        cluster   = county level
+      
+      STORE beta (coefficient on CMHC_ct)
+      
+      INTERPRET: percentage effect = (1 - exp(beta)) * 100%
+        e.g., beta = -0.153 → (1 - exp(-0.153))*100 ≈ 14.2% reduction
+
+  Observations: 60,316 (county-years, ~3,034 counties × ~20 years)
+
+------------------------------------------------------------------------
+EQUATION 2: Event Study Poisson
+------------------------------------------------------------------------
+
+Model:
+
+  E[y_cst | ...] = exp( alpha + ln(population) + theta_c + gamma_t 
+                        + lambda_s * t + xi * X_ct
+                        + SUM_{b=-3}^{-1} pi_b * CMHC_c * 1(t - T*_c in b)
+                        + SUM_{b=1}^{7}  tau_b * CMHC_c * 1(t - T*_c in b)
+                        + epsilon_cst )
+
+  where:
+    CMHC_c = 1 if county c ever gets a CMHC
+    T*_c   = year CMHC first implemented in county c
+    b      = 2-year bin index relative to treatment
+    Bin [-2,-1] is omitted (reference period)
+    Data aggregated into 2-year bins
+
+Pseudocode:
+
+  FOR each outcome in {nonwhite suicide, nonwhite homicide, 
+                        nonwhite female alcohol}:
+    
+    data = panel, 1969-1988, aggregated to 2-year bins
+    
+    CREATE event-time indicators:
+      FOR each treated county c:
+        event_time = t - T*_c
+        bin = floor(event_time / 2)
+      FOR never-treated counties: all event-time indicators = 0
+    
+    ESTIMATE Poisson regression:
+      depvar    = age_adjusted_death_count
+      offset    = ln(population)
+      regressors = {bin[-8,-7], bin[-6,-5], bin[-4,-3],
+                    bin[0,1], bin[2,3], bin[4,5], bin[6,7],
+                    bin[8,9], bin[10,11], bin[12,13]}
+      FE        = county_FE + year_FE
+      trends    = state_id * year (or urban-category-by-year)
+      controls  = same as Equation 1
+      weights   = relevant subgroup population
+      cluster   = county level
+    
+    STORE pi_b (pre-treatment) and tau_b (post-treatment)
+    PLOT coefficients with 95% CIs (Figure 3)
+
+------------------------------------------------------------------------
+EQUATION 3: Two-Way Mundlak Poisson (Robustness)
+------------------------------------------------------------------------
+
+  Fully interacted Poisson model following Wooldridge (2021):
+    - Cohort dummies d_ij (county i treated in cohort j)
+    - Post-treatment period dummies f_jt
+    - Cohort × controls interactions
+    - Cohort × post-period × controls interactions
+    - Treatment indicator w_it = 1(county i treated by period t)
+    - Cohort-specific time trends
+    - Offset: ln(population)
+  
+  Compute average effect by entry cohort:
+    tau_hat_r = (1 / (T - r + 1)) * SUM_{t=r}^{T} tau_hat_rt
+
+
+4. PRIORITY RANKING VALIDATION (Table 2)
+================================================================================
+
+  Pseudocode:
+
+  FOR states with county-level catchment area data (29 states):
+    
+    REGRESSION 1 (Linear Probability Model):
+      depvar  = ever_gets_CMHC (binary)
+      regressor = priority_rank_zscore
+      unit = catchment area
+      N = 365
+    
+    REGRESSION 2 (OLS):
+      depvar  = rollout_year (conditional on ever getting CMHC)
+      regressor = priority_rank_zscore
+      unit = catchment area
+      N = 235
+
+  RESULT: priority_rank coefficient is insignificant in both regressions
+          → rankings do NOT predict treatment or timing
+
+
+5. HEADLINE RESULTS
+================================================================================
+
+TABLE 3: Main Effects (Equation 1)
+----------------------------------
+                        Suicide     Homicide    Alcohol
+Total population        -0.013      -0.092      -0.021
+                        (0.016)     (0.070)     (0.074)
+
+White population        -0.003      -0.004       0.007
+                        (0.015)     (0.048)     (0.094)
+
+Non-white population    -0.085*     -0.153**    -0.018
+                        (0.051)     (0.072)     (0.058)
+
+N			60316	    60316	60316
+
+Note: Dependent variable is age-adjusted mortality counts. Poisson regressions include controls for the natural log of the respective population with the regression coefficient restricted to one and linear time trends for percent less than high school education, percent high school education, unemployment rate, and labor force participation rate. Regressions are weighted by the respective county population. Standard errors are clustered at the county level are in parenthesis. *p < 0.10, **p < 0.05, ***p < 0.01. Years included: 1969–1988.
+
+Interpretation (non-white):
+  Suicide:  (1 - exp(-0.085)) * 100 ≈ 8.2% reduction   [p < 0.10]
+  Homicide: (1 - exp(-0.153)) * 100 ≈ 14.2% reduction  [p < 0.05]
+  Alcohol:  not statistically significant for pooled non-white
+
+TABLE 4: By Race × Gender (Equation 1)
+---------------------------------------
+                        Suicide     Homicide    Alcohol
+Non-white men           -0.076      -0.160**     0.030
+                        (0.051)     (0.074)     (0.083)
+
+Non-white women         -0.128      -0.135*     -0.195*
+                        (0.099)     (0.070)     (0.117)
+
+White men               -0.009      -0.019       0.017
+                        (0.013)     (0.052)     (0.088)
+
+White women              0.005       0.040      -0.017
+                        (0.030)     (0.050)     (0.121)
+
+Note: Dependent variable is age-adjusted mortality counts. Poisson regressions include controls for the natural log of the respective population with the regression coefficient restricted to one and linear time trends for percent less than high school education, percent high school education, unemployment rate, and labor force participation rate. Regressions are weighted by the respective county population. Standard errors are clustered at the county level are in parenthesis. *p < 0.10, **p < 0.05, ***p < 0.01. Years included: 1969–1988.
+
+Key finding: Non-white women see 18% reduction in alcohol deaths
+             (1 - exp(-0.195)) * 100 ≈ 17.7%
+
+TABLE 5: By Age — Non-White Only (Equation 1)
+----------------------------------------------
+                        Suicide     Homicide    Alcohol
+Young (15-24)           -0.124**    -0.163*      0.311
+                        (0.061)     (0.097)     (0.318)
+
+Young adult (25-44)     -0.106      -0.193***   -0.034
+                        (0.069)     (0.074)     (0.064)
+
+Adult (45-64)            0.038      -0.070      -0.057
+                        (0.106)     (0.052)     (0.086)
+
+Elderly (65+)           -0.102      -0.188**     0.195
+                        (0.075)     (0.077)     (0.149)
+
+Key finding: 12% suicide reduction for young non-whites;
+             7-18% homicide reduction across all non-white age groups
+
+Note: Dependent variable is age-adjusted mortality counts. Poisson regressions include controls for the natural log of the respective population with the regression coefficient restricted to one and linear time trends for percent less than high school education, percent high school education, unemployment rate, and labor force participation rate. Regressions are weighted by the respective county population. Standard errors are clustered at the county level are in parenthesis. *p < 0.10, **p < 0.05, ***p < 0.01. Years included: 1969–1988. Age groups are defined as follows: 15–24 years old (young), 25–44 (young adult), 45–64 (adult), and 65 and older (elderly).
+
+EVENT STUDY (Figure 3):
+  - Pre-treatment coefficients cluster around zero → parallel trends hold
+  - Suicide effect: fairly constant over subsequent decade
+  - Homicide effect: strongest in first 5 years post-treatment
+  - Alcohol (NW women): persists ~10 years post-treatment
+
+
+6. ROBUSTNESS CHECKS
+================================================================================
+
+A. Boundary Analysis
+   - Restrict control group to counties adjacent to ever-treated counties
+   - Sample: 527 treated + 1537 adjacent untreated
+   - Results: virtually identical to baseline
+
+B. Winsorized Sample
+   - Estimate propensity score for receiving CMHC from 1970 observables
+   - Drop counties outside common support
+   - Results: virtually identical to baseline
+
+C. Community Health Center (CHC) Control
+   - Add binary control: CHC_ct = 1 if county c has a CHC by year t
+   - Results: virtually identical to baseline
+
+D. Two-Way FE Bias Checks
+   - Cohort-specific DiD: 6 separate regressions, each using one treatment 
+     cohort vs. all never-treated counties → coefficients generally negative
+   - Mundlak regression (Wooldridge 2021): average effects by cohort are 
+     generally negative, consistent with main results
+   - Note: >80% of counties never treated → problematic comparisons receive 
+     weight < 0.1 in Bacon decomposition
+
+All robustness checks in Table 6 confirm:
+  Non-white suicide reduction:          ~8%
+  Non-white homicide reduction:         ~14%
+  Non-white female alcohol reduction:   ~18%
+
+
+7. KEY NOTES FOR REPLICATION
+================================================================================
+
+- Standard errors: clustered at county level throughout
+- Weights: county population for relevant subgroup in all regressions
+- All Poisson models use ln(population) as offset (coefficient = 1)
+- State-specific linear time trends included in all specifications
+- Urban-category × year FE included in all specifications
+- 1970 census controls interacted with linear time trend
+- "Non-white" is ~87% Black; remainder mostly Asian/Pacific Islander 
+  and American Indian
+- Alternative suicide measure (suicide + accidental gun deaths) also used
+- SEER population data only provides white/black/other race categories

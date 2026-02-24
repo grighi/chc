@@ -1,0 +1,32 @@
+\begin{table}[htbp]
+\centering
+\caption{Poisson PPML Estimates: CMHC Effect on Cause-Specific Mortality}
+\label{tab:poisson_cmhc}
+\begin{tabular}{lccc}
+\toprule
+ & (1) & (2) & (3) \\
+ & \textbf{Suicide} & \textbf{Homicide} & \textbf{Alcohol} \\
+\midrule
+\multicolumn{4}{l}{Panel A: Total population} \\
+\quad CMHC & $0.051$ & $0.045$ & $0.051$ \\
+ & $(0.038)$ & $(0.067)$ & $(0.091)$ \\[6pt]
+\multicolumn{4}{l}{Panel B: White population} \\
+\quad CMHC & $0.064$ & $-0.076$ & $0.026$ \\
+ & $(0.041)$ & $(0.061)$ & $(0.097)$ \\[6pt]
+\multicolumn{4}{l}{Panel C: Non-white population} \\
+\quad CMHC & $-0.417$$^{*}$ & $0.149$ & $0.033$ \\
+ & $(0.229)$ & $(0.106)$ & $(0.172)$ \\
+\midrule
+County fixed effects & Yes & Yes & Yes \\
+Year fixed effects & Yes & Yes & Yes \\
+State linear time trend & Yes & Yes & Yes \\
+Controls & Yes & Yes & Yes \\
+Observations & 18,904 & 18,182 & 17,422 \\
+\bottomrule
+\end{tabular}
+\begin{minipage}{0.95\textwidth}
+\vspace{6pt}
+\footnotesize
+\textit{Note:} Dependent variable is age-adjusted mortality counts. Poisson regressions include controls for the natural log of the respective population with the regression coefficient restricted to one and linear time trends for percent less than high school education, percent high school education, unemployment rate, and labor force participation rate. Regressions are weighted by the respective county population. Standard errors clustered at the county level are in parenthesis. $^*p < 0.10$, $^{**}p < 0.05$, $^{***}p < 0.01$. Years included: 1969--1988.
+\end{minipage}
+\end{table}
