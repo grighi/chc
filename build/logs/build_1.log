@@ -1,0 +1,194 @@
+================================================================
+BUILD: Community Mental Health Centers -- Then and Now
+Started: 2026-02-20 06:36:15.126667
+================================================================
+
+00_setup.R loaded successfully.
+  Project root: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1
+  Output format: pdf
+
+========== DATA PREPARATION ==========
+
+
+========== 01: CMHC OPENINGS ==========
+  Time: 2026-02-20 06:36:15.794912
+
+  Loaded 1177 counties with CMHC openings
+  Year distribution:
+
+1971 1973 1975 1977 1981 
+ 208   58   77  715  119 
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/data/cmhc_openings.csv
+
+========== 02: AER PANEL (CMHC ERA) ==========
+  Time: 2026-02-20 06:36:15.859214
+
+  Loading AER data...
+  AER data: 96185 rows, 3065 counties
+  Priority data merged: 2359 counties
+  Propensity score data merged: 3068 counties
+  Incarceration data merged: 171156 county-years
+  CMHC panel: 91860 rows, 3062 counties, years 1959-1988
+  Treated counties (CMHC <= 1975): 333
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/data/cmhc_panel.parquet
+
+========== 03: INCARCERATION DATA ==========
+  Time: 2026-02-20 06:36:17.290116
+
+  Incarceration annual: 171156 rows, 3142 counties, years 1970-2024
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/data/incarceration_annual.parquet
+
+========== 04: CCBHC GRANTS ==========
+  Time: 2026-02-20 06:36:17.440829
+
+  Planning grant states: 41, 18, 25, 09, 42, 24, 27, 36, 29, 32, 26, 35, 44, 34, 02, 48, 21, 37, 06, 17, 19, 08, 51, 40
+  Loaded 1283 grant records
+  Unique treated counties: 409
+  Treatment year distribution:
+
+2018 2020 2021 2022 2023 2024 
+  57   94  140   81   33    4 
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/data/ccbhc_treatment.csv
+
+========== 05: CCBHC MORTALITY (WONDER) ==========
+  Time: 2026-02-20 06:36:17.480311
+
+  Population imputed for 15710 county-years (2021+)
+  CCBHC mortality: 31701 county-years, 2920 counties, years 2010-2025
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/data/ccbhc_mortality.parquet
+Warning messages:
+1: In eval(jsub, SDenv, parent.frame()) : NAs introduced by coercion
+2: In eval(jsub, SDenv, parent.frame()) : NAs introduced by coercion
+3: In eval(jsub, SDenv, parent.frame()) : NAs introduced by coercion
+4: In eval(jsub, SDenv, parent.frame()) : NAs introduced by coercion
+5: In eval(jsub, SDenv, parent.frame()) : NAs introduced by coercion
+6: In eval(jsub, SDenv, parent.frame()) : NAs introduced by coercion
+
+========== 06: CCBHC PANEL ==========
+  Time: 2026-02-20 06:36:18.073776
+
+  CCBHC treated counties: 409
+  SAMHSA facilities (2017): 2246 counties
+  CCBHC panel: 48372 rows, 3146 counties, years 2010-2025
+  Treated: 402, Control: 2744
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/data/ccbhc_panel.parquet
+Warning message:
+In dcast.data.table(., I ~ service, value.var = "val", fill = 0L) :
+  'fun.aggregate' is NULL, but found duplicate row/column combinations, so defaulting to length(). That is, the variables [I, service] used in 'formula' do not uniquely identify rows in the input 'data'. In such cases, 'fun.aggregate' is used to derive a single representative value for each combination in the output data.table, for example by summing or averaging (fun.aggregate=sum or fun.aggregate=mean, respectively). Check the resulting table for values larger than 1 to see which combinations were not unique. See ?dcast.data.table for more details.
+
+========== 07: NATIONAL MORTALITY TIME SERIES ==========
+  Time: 2026-02-20 06:36:19.948723
+
+  NBER counts: 10236917 rows, years 1959-2004
+  Found 4 WONDER parquet files
+  WONDER data loaded for national aggregation
+  National mortality: 52 rows, years 1959-2004
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/data/national_mortality.parquet
+
+========== CMHC-ERA OUTPUTS ==========
+
+
+========== 10: FIGURE 1 — FEDERAL BUDGETS ==========
+  Time: 2026-02-20 06:36:29.868645
+
+New names:
+• `` -> `...8`
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/figures/fig01_federal_budgets.pdf
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/data/fig01_federal_budgets.csv
+
+========== 11: FIGURE 2 — NATIONAL MORTALITY ==========
+  Time: 2026-02-20 06:36:30.28316
+
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/figures/fig02_national_mortality.pdf
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/data/fig02_national_mortality.csv
+
+========== 12: FIGURE 3 — CMHC ROLLOUT MAP ==========
+  Time: 2026-02-20 06:36:30.645169
+
+Linking to GEOS 3.13.0, GDAL 3.8.5, PROJ 9.5.1; sf_use_s2() is TRUE
+To enable caching of data, set `options(tigris_use_cache = TRUE)`
+in your R script or .Rprofile.
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/figures/fig03_cmhc_rollout_map.pdf
+
+========== 13: TABLE 1 — BALANCE TABLE ==========
+  Time: 2026-02-20 06:36:31.249334
+
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/data/table01_balance.csv
+  Shell saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/tables/table01_balance_shell.tex
+
+========== 14: FIGURE 4 — TIMING EXOGENEITY ==========
+  Time: 2026-02-20 06:36:31.322726
+
+  Treated counties with valid 1960 AMR: 330
+  Panel A slope: -0.625 (SE: 2.115, p = 0.768)
+  Panel B slope: -1.098 (SE: 1.004, p = 0.275)
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/figures/fig04_timing_exogeneity.pdf
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/data/fig04_timing_exogeneity_tests.csv
+
+========== 15: FIGURE 5 — CMHC EVENT STUDY, AGES 20-49 ==========
+  Time: 2026-02-20 06:36:31.931609
+
+NOTES: 90 observation removed because of 0-weight.
+       540 observations removed because of NA values (LHS: 90, RHS: 540).
+       0/0/30 fixed-effect singletons were removed (30 observations).
+The variables 'event_time_binned::-999', '`_60pcturban`', '`_pct59inclt3k`' and
+'`_60pctnonwhit`' have been removed because of collinearity (see $collin.var).
+  Model estimated. Extracting coefficients...
+  Joint significance tests:
+Wald test, H0: joint nullity of event_time_binned::-6, event_time_binned::-5, event_time_binned::-4, event_time_binned::-3 and event_time_binned::-2
+ stat = 1.67106, p-value = 0.137723, on 5 and 86,634 DoF, VCOV: Clustered (fips).  Pre-trend test: F = 1.67, p = 0.1377
+Wald test, H0: joint nullity of event_time_binned::0, event_time_binned::1, event_time_binned::2, event_time_binned::3, event_time_binned::4, event_time_binned::5 and 12 others
+ stat = 1.55403, p-value = 0.062503, on 18 and 86,634 DoF, VCOV: Clustered (fips).  Post-treatment test: F = 1.55, p = 0.0625
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/figures/fig05_cmhc_es_ad.pdf
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/data/cmhc_es_ad_coefs.csv
+
+  Post-treatment average (t=0 to t=14):
+    Mean coefficient: -6.703
+    Min coefficient:  -11.889 (t=13)
+
+========== 16: FIGURE 6 — CMHC EVENT STUDY, AGES 50+ ==========
+  Time: 2026-02-20 06:36:32.317232
+
+NOTES: 90 observation removed because of 0-weight.
+       540 observations removed because of NA values (LHS: 90, RHS: 540).
+       0/0/30 fixed-effect singletons were removed (30 observations).
+The variables 'event_time_binned::-999', '`_60pcturban`', '`_pct59inclt3k`' and
+'`_60pctnonwhit`' have been removed because of collinearity (see $collin.var).
+Wald test, H0: joint nullity of event_time_binned::-6, event_time_binned::-5, event_time_binned::-4, event_time_binned::-3 and event_time_binned::-2
+ stat = 1.9409, p-value = 0.084066, on 5 and 86,634 DoF, VCOV: Clustered (fips).  Pre-trend test: F = 1.94, p = 0.0841
+Wald test, H0: joint nullity of event_time_binned::0, event_time_binned::1, event_time_binned::2, event_time_binned::3, event_time_binned::4, event_time_binned::5 and 12 others
+ stat = 1.09674, p-value = 0.347591, on 18 and 86,634 DoF, VCOV: Clustered (fips).  Post-treatment test: F = 1.10, p = 0.3476
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/figures/fig06_cmhc_es_eld.pdf
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/data/cmhc_es_eld_coefs.csv
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Effect of CMHC Opening on Mortality (Ages 50+) — Placebo' in 'mbcsToSbcs': - substituted for — (U+2014)
+
+========== 17: TABLE 2 — DD ROBUSTNESS ==========
+  Time: 2026-02-20 06:36:32.636266
+
+NOTES: 90 observation removed because of 0-weight.
+       90 observations removed because of NA values (LHS: 90).
+NOTES: 90 observation removed because of 0-weight.
+       90 observations removed because of NA values (LHS: 90).
+NOTES: 90 observation removed because of 0-weight.
+       540 observations removed because of NA values (LHS: 90, RHS: 540).
+       0/0/30 fixed-effect singletons were removed (30 observations).
+The variables '`_60pcturban`', '`_pct59inclt3k`' and '`_60pctnonwhit`' have been
+removed because of collinearity (see $collin.var).
+NOTES: 90 observation removed because of 0-weight.
+       540 observations removed because of NA values (LHS: 90, RHS: 540).
+The variables '`_60pcturban`', '`_pct59inclt3k`' and '`_60pctnonwhit`' have been
+removed because of collinearity (see $collin.var).
+NOTES: 90 observation removed because of 0-weight.
+       540 observations removed because of NA values (LHS: 90, RHS: 540).
+       0/0/30 fixed-effect singletons were removed (30 observations).
+The variables '`_60pcturban`', '`_pct59inclt3k`' and '`_60pctnonwhit`' have been
+removed because of collinearity (see $collin.var).
+Error in if (sum(post_idx) > 0) { : missing value where TRUE/FALSE needed
+Calls: source -> withVisible -> eval -> eval
+In addition: Warning message:
+In eval(ei, envir) : NAs introduced by coercion
+Execution halted

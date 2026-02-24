@@ -6,3 +6,8 @@
 **rdss**.parquet
 **.parquet
 .wonder_session.json
+**.DS_Store
+
+CMHC Archive Documents/**
+aer_data/
+manuscript/

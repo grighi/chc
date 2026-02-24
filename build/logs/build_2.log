@@ -1,0 +1,481 @@
+================================================================
+BUILD: Community Mental Health Centers -- Then and Now
+Started: 2026-02-20 07:15:57.146924
+================================================================
+
+00_setup.R loaded successfully.
+  Project root: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1
+  Output format: pdf
+
+========== DATA PREPARATION ==========
+
+
+========== 01: CMHC OPENINGS ==========
+  Time: 2026-02-20 07:16:01.254515
+
+  Output exists, skipping.
+
+========== 02: AER PANEL (CMHC ERA) ==========
+  Time: 2026-02-20 07:16:01.259657
+
+  Output exists, skipping.
+
+========== 03: INCARCERATION DATA ==========
+  Time: 2026-02-20 07:16:01.26064
+
+  Output exists, skipping.
+
+========== 04: CCBHC GRANTS ==========
+  Time: 2026-02-20 07:16:01.261885
+
+  Output exists, skipping.
+
+========== 05: CCBHC MORTALITY (WONDER) ==========
+  Time: 2026-02-20 07:16:01.263518
+
+  Output exists, skipping.
+
+========== 06: CCBHC PANEL ==========
+  Time: 2026-02-20 07:16:01.264939
+
+  Output exists, skipping.
+
+========== 07: NATIONAL MORTALITY TIME SERIES ==========
+  Time: 2026-02-20 07:16:01.266546
+
+  Output exists, skipping.
+
+========== CMHC-ERA OUTPUTS ==========
+
+
+========== 10: FIGURE 1 — FEDERAL BUDGETS ==========
+  Time: 2026-02-20 07:16:01.267789
+
+New names:
+• `` -> `...8`
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/figures/fig01_federal_budgets.pdf
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/data/fig01_federal_budgets.csv
+
+========== 11: FIGURE 2 — NATIONAL MORTALITY ==========
+  Time: 2026-02-20 07:16:02.137046
+
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/figures/fig02_national_mortality.pdf
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/data/fig02_national_mortality.csv
+
+========== 12: FIGURE 3 — CMHC ROLLOUT MAP ==========
+  Time: 2026-02-20 07:16:02.804435
+
+Linking to GEOS 3.13.0, GDAL 3.8.5, PROJ 9.5.1; sf_use_s2() is TRUE
+To enable caching of data, set `options(tigris_use_cache = TRUE)`
+in your R script or .Rprofile.
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/figures/fig03_cmhc_rollout_map.pdf
+
+========== 13: TABLE 1 — BALANCE TABLE ==========
+  Time: 2026-02-20 07:16:07.132262
+
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/data/table01_balance.csv
+  Shell saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/tables/table01_balance_shell.tex
+
+========== 14: FIGURE 4 — TIMING EXOGENEITY ==========
+  Time: 2026-02-20 07:16:08.368799
+
+  Treated counties with valid 1960 AMR: 330
+  Panel A slope: -0.625 (SE: 2.115, p = 0.768)
+  Panel B slope: -1.098 (SE: 1.004, p = 0.275)
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/figures/fig04_timing_exogeneity.pdf
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/data/fig04_timing_exogeneity_tests.csv
+
+========== 15: FIGURE 5 — CMHC EVENT STUDY, AGES 20-49 ==========
+  Time: 2026-02-20 07:16:10.822558
+
+NOTES: 90 observation removed because of 0-weight.
+       540 observations removed because of NA values (LHS: 90, RHS: 540).
+       0/0/30 fixed-effect singletons were removed (30 observations).
+The variables 'event_time_binned::-999', '`_60pcturban`', '`_pct59inclt3k`' and
+'`_60pctnonwhit`' have been removed because of collinearity (see $collin.var).
+  Model estimated. Extracting coefficients...
+  Joint significance tests:
+Wald test, H0: joint nullity of event_time_binned::-6, event_time_binned::-5, event_time_binned::-4, event_time_binned::-3 and event_time_binned::-2
+ stat = 1.67106, p-value = 0.137723, on 5 and 86,634 DoF, VCOV: Clustered (fips).  Pre-trend test: F = 1.67, p = 0.1377
+Wald test, H0: joint nullity of event_time_binned::0, event_time_binned::1, event_time_binned::2, event_time_binned::3, event_time_binned::4, event_time_binned::5 and 12 others
+ stat = 1.55403, p-value = 0.062503, on 18 and 86,634 DoF, VCOV: Clustered (fips).  Post-treatment test: F = 1.55, p = 0.0625
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/figures/fig05_cmhc_es_ad.pdf
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/data/cmhc_es_ad_coefs.csv
+
+  Post-treatment average (t=0 to t=14):
+    Mean coefficient: -6.703
+    Min coefficient:  -11.889 (t=13)
+
+========== 16: FIGURE 6 — CMHC EVENT STUDY, AGES 50+ ==========
+  Time: 2026-02-20 07:16:12.687929
+
+NOTES: 90 observation removed because of 0-weight.
+       540 observations removed because of NA values (LHS: 90, RHS: 540).
+       0/0/30 fixed-effect singletons were removed (30 observations).
+The variables 'event_time_binned::-999', '`_60pcturban`', '`_pct59inclt3k`' and
+'`_60pctnonwhit`' have been removed because of collinearity (see $collin.var).
+Wald test, H0: joint nullity of event_time_binned::-6, event_time_binned::-5, event_time_binned::-4, event_time_binned::-3 and event_time_binned::-2
+ stat = 1.9409, p-value = 0.084066, on 5 and 86,634 DoF, VCOV: Clustered (fips).  Pre-trend test: F = 1.94, p = 0.0841
+Wald test, H0: joint nullity of event_time_binned::0, event_time_binned::1, event_time_binned::2, event_time_binned::3, event_time_binned::4, event_time_binned::5 and 12 others
+ stat = 1.09674, p-value = 0.347591, on 18 and 86,634 DoF, VCOV: Clustered (fips).  Post-treatment test: F = 1.10, p = 0.3476
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/figures/fig06_cmhc_es_eld.pdf
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/data/cmhc_es_eld_coefs.csv
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Effect of CMHC Opening on Mortality (Ages 50+) — Placebo' in 'mbcsToSbcs': - substituted for — (U+2014)
+
+========== 17: TABLE 2 — DD ROBUSTNESS ==========
+  Time: 2026-02-20 07:16:15.23111
+
+NOTES: 90 observation removed because of 0-weight.
+       90 observations removed because of NA values (LHS: 90).
+NOTES: 90 observation removed because of 0-weight.
+       90 observations removed because of NA values (LHS: 90).
+NOTES: 90 observation removed because of 0-weight.
+       540 observations removed because of NA values (LHS: 90, RHS: 540).
+       0/0/30 fixed-effect singletons were removed (30 observations).
+The variables '`_60pcturban`', '`_pct59inclt3k`' and '`_60pctnonwhit`' have been
+removed because of collinearity (see $collin.var).
+NOTES: 90 observation removed because of 0-weight.
+       540 observations removed because of NA values (LHS: 90, RHS: 540).
+The variables '`_60pcturban`', '`_pct59inclt3k`' and '`_60pctnonwhit`' have been
+removed because of collinearity (see $collin.var).
+NOTES: 90 observation removed because of 0-weight.
+       540 observations removed because of NA values (LHS: 90, RHS: 540).
+       0/0/30 fixed-effect singletons were removed (30 observations).
+The variables '`_60pcturban`', '`_pct59inclt3k`' and '`_60pctnonwhit`' have been
+removed because of collinearity (see $collin.var).
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/data/table02_dd_robustness.csv
+NOTES: 90 observation removed because of 0-weight.
+       540 observations removed because of NA values (LHS: 90, RHS: 540).
+       0/0/30 fixed-effect singletons were removed (30 observations).
+The variables '`_60pcturban`', '`_pct59inclt3k`' and '`_60pctnonwhit`' have been
+removed because of collinearity (see $collin.var).
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/data/table02_dd_robustness_full.csv
+
+========== 18: FIGURE 7 — CHC ROBUSTNESS ==========
+  Time: 2026-02-20 07:16:28.211543
+
+NOTES: 90 observation removed because of 0-weight.
+       540 observations removed because of NA values (LHS: 90, RHS: 540).
+       0/0/30 fixed-effect singletons were removed (30 observations).
+The variables 'event_time_binned::-999', '`_60pcturban`', '`_pct59inclt3k`' and
+'`_60pctnonwhit`' have been removed because of collinearity (see $collin.var).
+NOTES: 90 observation removed because of 0-weight.
+       540 observations removed because of NA values (LHS: 90, RHS: 540).
+       0/0/30 fixed-effect singletons were removed (30 observations).
+The variables 'event_time_binned::-999', '`_60pcturban`', '`_pct59inclt3k`' and
+'`_60pctnonwhit`' have been removed because of collinearity (see $collin.var).
+NOTES: 90 observation removed because of 0-weight.
+       90 observations removed because of NA values (LHS: 90, RHS: 90).
+       0/0/30 fixed-effect singletons were removed (30 observations).
+The variables 'event_time_binned::-999' and 'chc_event_time_binned::-999' have
+been removed because of collinearity (see $collin.var).
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/figures/fig07_cmhc_chc_robust.pdf
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/data/fig07_panel_a_coefs.csv
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/data/fig07_panel_b_coefs.csv
+
+========== 19: TABLE 3 — CAUSE DECOMPOSITION ==========
+  Time: 2026-02-20 07:16:33.923426
+
+NOTES: 90 observation removed because of 0-weight.
+       540 observations removed because of NA values (LHS: 90, RHS: 540).
+       0/0/30 fixed-effect singletons were removed (30 observations).
+The variables 'event_time_binned::-999', '`_60pcturban`', '`_pct59inclt3k`' and
+'`_60pctnonwhit`' have been removed because of collinearity (see $collin.var).
+Wald test, H0: joint nullity of event_time_binned::-6, event_time_binned::-5, event_time_binned::-4, event_time_binned::-3 and event_time_binned::-2
+ stat = 1.67106, p-value = 0.137723, on 5 and 86,634 DoF, VCOV: Clustered (fips).NOTES: 90 observation removed because of 0-weight.
+       540 observations removed because of NA values (LHS: 90, RHS: 540).
+       0/0/30 fixed-effect singletons were removed (30 observations).
+The variables 'event_time_binned::-999', '`_60pcturban`', '`_pct59inclt3k`' and
+'`_60pctnonwhit`' have been removed because of collinearity (see $collin.var).
+Wald test, H0: joint nullity of event_time_binned::-6, event_time_binned::-5, event_time_binned::-4, event_time_binned::-3 and event_time_binned::-2
+ stat = 0.308767, p-value = 0.907955, on 5 and 86,634 DoF, VCOV: Clustered (fips).NOTES: 90 observation removed because of 0-weight.
+       540 observations removed because of NA values (LHS: 90, RHS: 540).
+       0/0/30 fixed-effect singletons were removed (30 observations).
+The variables 'event_time_binned::-999', '`_60pcturban`', '`_pct59inclt3k`' and
+'`_60pctnonwhit`' have been removed because of collinearity (see $collin.var).
+Wald test, H0: joint nullity of event_time_binned::-6, event_time_binned::-5, event_time_binned::-4, event_time_binned::-3 and event_time_binned::-2
+ stat = 1.21511, p-value = 0.298946, on 5 and 86,634 DoF, VCOV: Clustered (fips).NOTES: 90 observation removed because of 0-weight.
+       540 observations removed because of NA values (LHS: 90, RHS: 540).
+       0/0/30 fixed-effect singletons were removed (30 observations).
+The variables 'event_time_binned::-999', '`_60pcturban`', '`_pct59inclt3k`' and
+'`_60pctnonwhit`' have been removed because of collinearity (see $collin.var).
+Wald test, H0: joint nullity of event_time_binned::-6, event_time_binned::-5, event_time_binned::-4, event_time_binned::-3 and event_time_binned::-2
+ stat = 1.62162, p-value = 0.150391, on 5 and 86,634 DoF, VCOV: Clustered (fips).NOTES: 90 observation removed because of 0-weight.
+       540 observations removed because of NA values (LHS: 90, RHS: 540).
+       0/0/30 fixed-effect singletons were removed (30 observations).
+The variables 'event_time_binned::-999', '`_60pcturban`', '`_pct59inclt3k`' and
+'`_60pctnonwhit`' have been removed because of collinearity (see $collin.var).
+Wald test, H0: joint nullity of event_time_binned::-6, event_time_binned::-5, event_time_binned::-4, event_time_binned::-3 and event_time_binned::-2
+ stat = 3.22815, p-value = 0.006457, on 5 and 86,634 DoF, VCOV: Clustered (fips).NOTES: 90 observation removed because of 0-weight.
+       540 observations removed because of NA values (LHS: 90, RHS: 540).
+       0/0/30 fixed-effect singletons were removed (30 observations).
+The variables 'event_time_binned::-999', '`_60pcturban`', '`_pct59inclt3k`' and
+'`_60pctnonwhit`' have been removed because of collinearity (see $collin.var).
+Wald test, H0: joint nullity of event_time_binned::-6, event_time_binned::-5, event_time_binned::-4, event_time_binned::-3 and event_time_binned::-2
+ stat = 0.84705, p-value = 0.516071, on 5 and 86,634 DoF, VCOV: Clustered (fips).NOTES: 90 observation removed because of 0-weight.
+       540 observations removed because of NA values (LHS: 90, RHS: 540).
+       0/0/30 fixed-effect singletons were removed (30 observations).
+The variables 'event_time_binned::-999', '`_60pcturban`', '`_pct59inclt3k`' and
+'`_60pctnonwhit`' have been removed because of collinearity (see $collin.var).
+Wald test, H0: joint nullity of event_time_binned::-6, event_time_binned::-5, event_time_binned::-4, event_time_binned::-3 and event_time_binned::-2
+ stat = 1.97859, p-value = 0.078338, on 5 and 86,634 DoF, VCOV: Clustered (fips).  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/data/table03_cause_decomp_cmhc.csv
+  Computing residual cause category...
+NOTES: 90 observation removed because of 0-weight.
+       540 observations removed because of NA values (LHS: 90, RHS: 540).
+       0/0/30 fixed-effect singletons were removed (30 observations).
+The variables 'event_time_binned::-999', '`_60pcturban`', '`_pct59inclt3k`' and
+'`_60pctnonwhit`' have been removed because of collinearity (see $collin.var).
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/data/table03_cause_decomp_cmhc.csv
+
+========== 20: FIGURE — CMHC BY RACE ==========
+  Time: 2026-02-20 07:16:45.373179
+
+  Race-specific AMR (20-49) NOT available.
+  Falling back to 50+ race decomposition (amr_w_eld, amr_nw_eld).
+NOTES: 90 observation removed because of 0-weight.
+       540 observations removed because of NA values (LHS: 90, RHS: 540).
+       0/0/30 fixed-effect singletons were removed (30 observations).
+The variables 'event_time_binned::-999', '`_60pcturban`', '`_pct59inclt3k`' and
+'`_60pctnonwhit`' have been removed because of collinearity (see $collin.var).
+NOTES: 90 observation removed because of 0-weight.
+       540 observations removed because of NA values (LHS: 90, RHS: 540).
+       0/0/30 fixed-effect singletons were removed (30 observations).
+The variables 'event_time_binned::-999', '`_60pcturban`', '`_pct59inclt3k`' and
+'`_60pctnonwhit`' have been removed because of collinearity (see $collin.var).
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/figures/fig_cmhc_race.pdf
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/data/fig_cmhc_race_coefs.csv
+
+========== 21: FIGURE — CMHC HETEROGENEITY ==========
+  Time: 2026-02-20 07:16:48.485302
+
+NOTES: 30 observation removed because of 0-weight.
+       60 observations removed because of NA values (LHS: 30, RHS: 60).
+       0/0/30 fixed-effect singletons were removed (30 observations).
+The variables 'event_time_binned::-999', '`_60pcturban`', '`_pct59inclt3k`' and
+'`_60pctnonwhit`' have been removed because of collinearity (see $collin.var).
+NOTES: 30 observations removed because of NA values (RHS: 30).
+       0/0/150 fixed-effect singletons were removed (150 observations).
+The variables 'event_time_binned::-999', '`_60pcturban`', '`_pct59inclt3k`' and
+'`_60pctnonwhit`' have been removed because of collinearity (see $collin.var).
+NOTES: 450 observations removed because of NA values (RHS: 450).
+       0/0/90 fixed-effect singletons were removed (90 observations).
+The variables 'event_time_binned::-999', '`_60pcturban`', '`_pct59inclt3k`' and
+'`_60pctnonwhit`' have been removed because of collinearity (see $collin.var).
+NOTES: 30 observation removed because of 0-weight.
+       30 observations removed because of NA values (LHS: 30, RHS: 30).
+       0/0/60 fixed-effect singletons were removed (60 observations).
+The variables 'event_time_binned::-999', '`_60pcturban`', '`_pct59inclt3k`' and
+'`_60pctnonwhit`' have been removed because of collinearity (see $collin.var).
+NOTES: 450 observations removed because of NA values (RHS: 450).
+       0/0/60 fixed-effect singletons were removed (60 observations).
+The variables 'event_time_binned::-999', '`_60pcturban`', '`_pct59inclt3k`' and
+'`_60pctnonwhit`' have been removed because of collinearity (see $collin.var).
+NOTE: 0/0/30 fixed-effect singletons were removed (30 observations).
+The variables 'event_time_binned::-999', '`_60pcturban`', '`_pct59inclt3k`' and
+'`_60pctnonwhit`' have been removed because of collinearity (see $collin.var).
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/figures/fig_cmhc_heterogeneity.pdf
+
+========== 22: TABLE — CMHC INCARCERATION LONG-DIFFERENCE ==========
+  Time: 2026-02-20 07:16:54.84511
+
+
+  Long-difference results (small counties, controls + state FE):
+      end_year        coef         se       pval    n n_treated
+cmhc      1978 -0.12586515 0.05551029 0.02349924 1633       513
+cmhc1     1983 -0.08305023 0.05631336 0.14047350 1599       528
+cmhc2     1988 -0.08538515 0.05607892 0.12806239 1628       541
+cmhc3     1993 -0.08747039 0.05811322 0.13248048 1628       538
+cmhc4     2000 -0.07879766 0.06114946 0.19772363 1630       535
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/data/table_cmhc_incarceration_ld.csv
+
+========== CCBHC-ERA OUTPUTS ==========
+
+
+========== 23: FIGURE 8 — CCBHC MORTALITY EVENT STUDY ==========
+  Time: 2026-02-20 07:16:55.432245
+
+  Mortality panel: 26077 rows, 2869 counties
+  Matched counties: 1150
+NOTE: 10/0 fixed-effect singletons were removed (10 observations).
+The variable 'event_time_binned::-999' has been removed because of collinearity
+(see $collin.var).
+Wald test, H0: joint nullity of event_time_binned::-5, event_time_binned::-4, event_time_binned::-3 and event_time_binned::-2
+ stat = 0.722513, p-value = 0.576407, on 4 and 13,034 DoF, VCOV: Clustered (fips).  Pre-trend test: F = 0.72, p = 0.5764
+Wald test, H0: joint nullity of event_time_binned::0, event_time_binned::1, event_time_binned::2, event_time_binned::3, event_time_binned::4 and event_time_binned::5
+ stat = 5.40679, p-value = 1.364e-5, on 6 and 13,034 DoF, VCOV: Clustered (fips).  Post-treatment test: F = 5.41, p = 0.0000
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/figures/fig08_ccbhc_es_mort.pdf
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/data/ccbhc_mort_baseline_coefs.csv
+NOTE: 10/0 fixed-effect singletons were removed (10 observations).
+The variable 'event_time_binned::-999' has been removed because of collinearity
+(see $collin.var).
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/data/ccbhc_mort_smallk_coefs.csv
+The variable 'event_time_binned::-999' has been removed because of collinearity
+(see $collin.var).
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/data/ccbhc_mort_largek_coefs.csv
+
+========== 24: FIGURE 9 — CCBHC ROBUSTNESS ==========
+  Time: 2026-02-20 07:16:55.879342
+
+  Panel A (excl. waiver): 321 treated, 2112 control
+NOTE: 223/0 fixed-effect singletons were removed (223 observations).
+The variable 'event_time_binned::-999' has been removed because of collinearity
+(see $collin.var).
+  Panel B (planning): 245 treated, 1294 control
+NOTE: 154/0 fixed-effect singletons were removed (154 observations).
+The variable 'event_time_binned::-999' has been removed because of collinearity
+(see $collin.var).
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/figures/fig09_ccbhc_robust.pdf
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/data/ccbhc_rob_no_waiver_coefs.csv
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/data/ccbhc_rob_planning_coefs.csv
+
+========== 25: FIGURE 10 — CCBHC INCARCERATION EVENT STUDY ==========
+  Time: 2026-02-20 07:16:56.901067
+
+  Incarceration panel: 30632 rows, 3018 counties
+NOTE: 1/0 fixed-effect singleton was removed (1 observation).
+The variable 'event_time_binned::-999' has been removed because of collinearity
+(see $collin.var).
+Wald test, H0: joint nullity of event_time_binned::-5, event_time_binned::-4, event_time_binned::-3 and event_time_binned::-2
+ stat = 1.59577, p-value = 0.172389, on 4 and 11,322 DoF, VCOV: Clustered (fips).  Pre-trend test: F = 1.60, p = 0.1724
+Wald test, H0: joint nullity of event_time_binned::0, event_time_binned::1, event_time_binned::2, event_time_binned::3, event_time_binned::4 and event_time_binned::5
+ stat = 1.29295, p-value = 0.256496, on 6 and 11,322 DoF, VCOV: Clustered (fips).  Post-treatment test: F = 1.29, p = 0.2565
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/figures/fig10_ccbhc_es_inc.pdf
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/data/ccbhc_inc_baseline_coefs.csv
+Warning messages:
+1: glm.fit: fitted probabilities numerically 0 or 1 occurred 
+2: The VCOV matrix is not positive semi-definite and was 'fixed' (see ?vcov). 
+
+========== 26: TABLE — CCBHC HETEROGENEITY ==========
+  Time: 2026-02-20 07:16:57.295261
+
+NOTE: 37/0 fixed-effect singletons were removed (37 observations).
+The variable 'event_time_binned::-999' has been removed because of collinearity
+(see $collin.var).
+NOTE: 9/0 fixed-effect singletons were removed (9 observations).
+The variable 'event_time_binned::-999' has been removed because of collinearity
+(see $collin.var).
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/data/table_ccbhc_heterogeneity.csv
+
+========== CROSS-ERA AND APPENDIX ==========
+
+
+========== 27: FIGURE — SIDE-BY-SIDE COMPARISON ==========
+  Time: 2026-02-20 07:16:57.523843
+
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/figures/fig_side_by_side.pdf
+
+========== 28: APPENDIX — POISSON SPECIFICATION ==========
+  Time: 2026-02-20 07:16:58.276161
+
+NOTES: 450 observations removed because of NA values (RHS: 450).
+       0/0/30 fixed-effects (30 observations) removed because of only 0 outcomes or singletons.
+The variables 'event_time_binned::-999', '`_60pcturban`', '`_pct59inclt3k`' and
+'`_60pctnonwhit`' have been removed because of collinearity (see $collin.var).
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/data/appendix_poisson_coefs.csv
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/figures/fig_appendix_poisson.pdf
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/data/appendix_poisson_comparison.csv
+Warning message:
+The VCOV matrix is not positive semi-definite and was 'fixed' (see ?vcov). 
+
+========== 29: APPENDIX — BACON DECOMPOSITION ==========
+  Time: 2026-02-20 07:17:02.653953
+
+  WARNING: bacondecomp not installed. Skipping.
+
+========== 30: APPENDIX — CCBHC 50+ PLACEBO ==========
+  Time: 2026-02-20 07:17:02.6553
+
+  Found 2 potential 50+ WONDER files. Attempting to load...
+  Loaded WONDER 50+ data. Processing...
+
+========== 31: APPENDIX — CCBHC DOD DECOMPOSITION ==========
+  Time: 2026-02-20 07:17:02.759569
+
+NOTE: 386/0 fixed-effect singletons were removed (386 observations).
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/data/ccbhc_dod_icdfmentalbehavioral_coefs.csv
+NOTE: 352/0 fixed-effect singletons were removed (352 observations).
+The variable 'event_time_binned::-999' has been removed because of collinearity
+(see $collin.var).
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/data/ccbhc_dod_externalcausesuv_coefs.csv
+  Saved: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/figures/fig_ccbhc_dod_decomp.pdf
+
+========== GENERATING LATEX TABLES ==========
+
+============================================================
+fill_tables.py: Generating LaTeX tables from CSV outputs
+============================================================
+  Wrote: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/tables/table01_balance.tex
+  Wrote: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/tables/table02_dd_robustness.tex
+  Wrote: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/tables/table03_cause_decomp_cmhc.tex
+  Wrote: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/tables/table_cmhc_incarceration_ld.tex
+  Wrote: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/tables/table_ccbhc_heterogeneity.tex
+  Wrote: /Users/giovannirighi/Documents/ucla/writing/cmhcs/112871-V1/build/output/tables/table_appendix_poisson.tex
+
+Done.
+  LaTeX tables generated via fill_tables.py
+
+================================================================
+BUILD COMPLETE: 2026-02-20 07:17:04.778821
+Total time: 1.1 minutes
+================================================================
+
+Generated figures:
+   fig_appendix_poisson.pdf
+   fig_ccbhc_dod_decomp.pdf
+   fig_cmhc_heterogeneity.pdf
+   fig_cmhc_race.pdf
+   fig_side_by_side.pdf
+   fig01_federal_budgets.pdf
+   fig02_national_mortality.pdf
+   fig03_cmhc_rollout_map.pdf
+   fig04_timing_exogeneity.pdf
+   fig05_cmhc_es_ad.pdf
+   fig06_cmhc_es_eld.pdf
+   fig07_cmhc_chc_robust.pdf
+   fig08_ccbhc_es_mort.pdf
+   fig09_ccbhc_robust.pdf
+   fig10_ccbhc_es_inc.pdf 
+
+Generated tables:
+   table_appendix_poisson_shell.tex
+   table_appendix_poisson.tex
+   table_ccbhc_heterogeneity_shell.tex
+   table_ccbhc_heterogeneity.tex
+   table_cmhc_incarceration_ld_shell.tex
+   table_cmhc_incarceration_ld.tex
+   table01_balance_shell.tex
+   table01_balance.tex
+   table02_dd_robustness_shell.tex
+   table02_dd_robustness.tex
+   table03_cause_decomp_cmhc_shell.tex
+   table03_cause_decomp_cmhc.tex 
+
+Generated data:
+   appendix_poisson_coefs.csv
+   appendix_poisson_comparison.csv
+   ccbhc_dod_externalcausesuv_coefs.csv
+   ccbhc_dod_icdfmentalbehavioral_coefs.csv
+   ccbhc_inc_baseline_coefs.csv
+   ccbhc_mort_baseline_coefs.csv
+   ccbhc_mort_largek_coefs.csv
+   ccbhc_mort_smallk_coefs.csv
+   ccbhc_rob_no_waiver_coefs.csv
+   ccbhc_rob_planning_coefs.csv
+   cmhc_es_ad_coefs.csv
+   cmhc_es_eld_coefs.csv
+   fig_cmhc_race_coefs.csv
+   fig01_federal_budgets.csv
+   fig02_national_mortality.csv
+   fig04_timing_exogeneity_tests.csv
+   fig07_panel_a_coefs.csv
+   fig07_panel_b_coefs.csv
+   table_ccbhc_heterogeneity.csv
+   table_cmhc_incarceration_ld.csv
+   table01_balance.csv
+   table02_dd_robustness_full.csv
+   table02_dd_robustness.csv
+   table03_cause_decomp_cmhc.csv 
