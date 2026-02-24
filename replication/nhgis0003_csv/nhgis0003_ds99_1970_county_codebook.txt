@@ -1,0 +1,141 @@
+--------------------------------------------------------------------------------
+Codebook for NHGIS data file 'nhgis0003_ds99_1970_county'
+--------------------------------------------------------------------------------
+ 
+Contents
+    - Data Summary
+    - Data Dictionary
+    - Citation and Use
+ 
+Additional documentation on NHGIS data sources is available at: 
+    https://www.nhgis.org/documentation/tabular-data 
+ 
+--------------------------------------------------------------------------------
+Data Summary
+--------------------------------------------------------------------------------
+ 
+Year:             1970
+Geographic level: County (by State)
+Extent:           All areas
+Dataset:          1970 Census: Count 4Pb - Sample-Based Population Data with Race/Ethnicity Breakdown
+   NHGIS code:    1970_Cnt4Pb
+   NHGIS ID:      ds99
+Breakdown(s):     Geographic Subarea:
+                     Total area (000)
+                  Race/Ethnicity:
+                     All races (000)
+ 
+Tables:
+ 
+1. Occupation
+   Universe:    Employed Females 16 Years and Over
+   Source code: NT59
+   NHGIS code:  C28
+ 
+--------------------------------------------------------------------------------
+Data Dictionary
+--------------------------------------------------------------------------------
+ 
+Context Fields 
+        GISJOIN:     GIS Join Match Code
+        YEAR:        Data File Year
+        REGIONA:     Region Code
+        DIVISIONA:   Division Code
+        STATE:       State Name
+        STATEA:      State Code
+        COUNTY:      County Name
+        COUNTYA:     County Code
+        CTY_SUBA:    County Subdivision Code
+        PLACEA:      Place Code
+        TRACTA:      Census Tract Code
+        SCSAA:       Standard Consolidated Statistical Area Code
+        SMSAA:       Standard Metropolitan Statistical Area Code
+        URB_AREAA:   Urban Area Code
+        AREANAME:    Area Name
+        CENCNTY:     1970 Central County Code
+        CBD:         Central Business District
+        SEA:         State Economic Area
+ 
+Breakdown:
+    Geographic Subarea: Total area (000)
+    Race/Ethnicity: All races (000)
+ 
+    Table 1:     Occupation
+    Universe:    Employed Females 16 Years and Over
+    Source code: NT59
+    NHGIS code:  C28
+        C28001:      Professional, technical and kindred workers: Nurses
+        C28002:      Professional, technical and kindred workers: Medical and other health workers, except nurses
+        C28003:      Professional, technical and kindred workers: Teachers, elementary and secondary schools
+        C28004:      Professional, technical and kindred workers: Technicians, except health
+        C28005:      Professional, technical and kindred workers: Other professional workers
+        C28006:      Managers and administrators, except farm
+        C28007:      Sales workers: Retail trade
+        C28008:      Sales workers: Other than retail trade
+        C28009:      Clerical and kindred workers: Bookkeepers
+        C28010:      Clerical and kindred workers: Secretaries, stenographers, and typists
+        C28011:      Clerical and kindred workers: Other clerical workers
+        C28012:      Craftsmen, foremen, and kindred workers
+        C28013:      Operatives, except transport: Durable goods, manufacturing
+        C28014:      Operatives, except transport: Nondurable goods, manufacturing
+        C28015:      Operatives, except transport: Nonmanufacturing industries
+        C28016:      Transport equipment operatives
+        C28017:      Laborers, except farm
+        C28018:      Farmers and farm managers
+        C28019:      Farm laborers and farm foremen: Farm laborers, unpaid family workers
+        C28020:      Farm laborers and farm foremen: Farm laborers, except unpaid, and farm foremen
+        C28021:      Service workers, except private household: Cleaning and service workers
+        C28022:      Service workers, except private household: Food service workers
+        C28023:      Service workers, except private household: Health service workers
+        C28024:      Service workers, except private household: Personal service workers
+        C28025:      Service workers, except private household: Protective service workers
+        C28026:      Service workers, except private household: Service workers, except private household
+        C28027:      Private household workers
+ 
+--------------------------------------------------------------------------------
+Citation and Use of NHGIS Data
+--------------------------------------------------------------------------------
+ 
+All persons are granted a limited license to use this documentation and the
+accompanying data, subject to the following conditions:
+
+* REDISTRIBUTION: You will not redistribute the data without permission.
+
+  You may publish a subset of the data to meet journal requirements for accessing 
+  data related to a particular publication. Contact us for permission for any other 
+  redistribution; we will consider requests for free and commercial redistribution.
+
+* CITATION: You will cite NHGIS appropriately.
+
+    * Publications and research reports employing NHGIS data (either tabular or GIS) 
+      should include the following citation:
+
+        Jonathan Schroeder, David Van Riper, Steven Manson, Katherine Knowles, Tracy Kugler, Finn Roberts, and Steven Ruggles. 
+        IPUMS National Historical Geographic Information System: Version 20.0 
+        [dataset]. Minneapolis, MN: IPUMS. 2025. 
+        http://doi.org/10.18128/D050.V20.0
+
+    * For policy briefs, online resources, or articles in the popular press, we 
+      recommend that you cite the use of NHGIS data as follows:
+
+        IPUMS NHGIS, University of Minnesota, www.nhgis.org.
+
+These terms of use are a legally binding agreement. You can use the data only in 
+accordance with these terms, and any other use is a violation of the agreement. 
+Violations may result in revocation of the agreement and prohibition from using other 
+IPUMS data. If IPUMS or our partners are harmed from your violation, you are 
+responsible for all damages, including reasonable attorney's fees and expenses.
+        
+In addition, we request that users send us a copy of any publications, research
+reports, or educational material making use of the data or documentation.
+
+Send electronic material to: nhgis@umn.edu
+
+Printed matter should be sent to:
+
+    IPUMS NHGIS
+    Institute for Social Research and Data Innovation
+    University of Minnesota
+    50 Willey Hall
+    225 19th Ave S
+    Minneapolis, MN 55455

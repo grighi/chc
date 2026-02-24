@@ -110,22 +110,46 @@ cat(sprintf("  Exact-match states: %d / %d\n", sum(comp$match, na.rm = TRUE), nr
 nber_deaths_by_co <- nber_raw[nber_co != "000" & nber_co != "999",
                                .(total_deaths = sum(deaths, na.rm = TRUE)),
                                by = .(nber_st, nber_co)]
-# Load pop early (used for variance minimization + age adjustment)
-pop <- as.data.table(read_parquet("raw/county_pop_demo.parquet"))
-pop[, fips := as.integer(fips)]
-pop[, race_group := fifelse(race == 1, "white", "nonwhite")]
-pop_total_by_fips <- pop[, .(total_pop = sum(pop, na.rm = TRUE)), by = .(fips)]
+# Load SEER population data (19 age groups → matches NBER age bins exactly)
+cat("  Loading SEER population data...\n")
+seer <- fread("raw/population_seer/uswbo19agesadj.csv")
+seer <- seer[year >= 1969 & year <= 1988]
+seer[, fips := as.integer(county)]
+seer[, race_group := fifelse(race == 1, "white", "nonwhite")]
+
+# Map SEER 19 age codes (0-18) → NBER age bins
+# 0=<1, 1=1-4, 2=5-9, 3=10-14, 4=15-19, 5=20-24, 6=25-29, 7=30-34,
+# 8=35-39, 9=40-44, 10=45-49, 11=50-54, 12=55-59, 13=60-64,
+# 14=65-69, 15=70-74, 16=75-79, 17=80-84, 18=85+
+seer_age_map <- data.table(
+  seer_age = 0:18,
+  nber_age_bin = c("0", "1-4", "5-14", "5-14", "15-24", "15-24",
+                   "25-34", "25-34", "35-44", "35-44", "45-54", "45-54",
+                   "55-64", "55-64", "65-74", "65-74", "75-84", "75-84", "85+")
+)
+seer <- merge(seer, seer_age_map, by.x = "age", by.y = "seer_age", all.x = TRUE)
+cat(sprintf("  SEER: %d rows, %d counties, years %d-%d\n",
+            nrow(seer), uniqueN(seer$fips), min(seer$year), max(seer$year)))
+
+# Aggregations from SEER
+pop_total_by_fips <- seer[, .(total_pop = sum(as.numeric(pop), na.rm = TRUE)), by = .(fips)]
 
 # Age-specific population for direct age standardization
-pop_race_age  <- pop[, .(pop = sum(pop, na.rm = TRUE)),
-                      by = .(fips, year, race_group, age_bin)]
-pop_total_age <- pop[, .(pop = sum(pop, na.rm = TRUE)),
-                      by = .(fips, year, age_bin)]
+pop_race_age  <- seer[, .(pop = sum(as.numeric(pop), na.rm = TRUE)),
+                       by = .(fips, year, race_group, nber_age_bin)]
+pop_total_age <- seer[, .(pop = sum(as.numeric(pop), na.rm = TRUE)),
+                       by = .(fips, year, nber_age_bin)]
 
 # Standard population: mean county pop by age group (fixed reference)
-std_pop <- pop_total_age[, .(std_pop = mean(pop)), by = age_bin]
+std_pop <- pop_total_age[, .(std_pop = mean(pop)), by = nber_age_bin]
 cat("  Standard population for age adjustment:\n")
 print(std_pop)
+
+# Total pop for panel offset/weights (summed across all ages)
+pop_race  <- seer[, .(population = sum(as.numeric(pop), na.rm = TRUE)),
+                   by = .(fips, year, race_group)]
+pop_total <- seer[, .(population = sum(as.numeric(pop), na.rm = TRUE)),
+                   by = .(fips, year)]
 
 # Single-drop variance minimization
 varmin_drop <- function(st_fips, nber_cos, incarc_rows, drop_from) {
@@ -203,16 +227,28 @@ greedy_multi_drop <- function(st_fips, nber_cos, incarc_rows, n_drops) {
       v <- var(xw$total_deaths / xw$total_pop)
       if (v < best_var) { best_var <- v; best_idx <- i }
     }
-    if (!is.null(best_idx)) {
+    if (is.null(best_idx)) {
+      # Fallback: drop county with smallest/no population in SEER
+      pops <- merge(current, pop_total_by_fips, by = "fips", all.x = TRUE)
+      pops[is.na(total_pop), total_pop := 0]
+      best_idx <- which.min(pops$total_pop)
+      cat(sprintf("    AK drop %d/%d: FALLBACK '%s' (FIPS %d, smallest pop)\n",
+                  d, n_drops, current$county_name[best_idx],
+                  current$fips[best_idx]))
+    } else {
       cat(sprintf("    AK drop %d/%d: '%s' (FIPS %d), var = %.2e\n",
                   d, n_drops, current$county_name[best_idx],
                   current$fips[best_idx], best_var))
-      current <- current[-best_idx]
     }
+    current <- current[-best_idx]
   }
 
   final <- current[order(county_name)]
-  stopifnot(nrow(final) == n_nber)
+  if (nrow(final) != n_nber) {
+    cat(sprintf("    WARNING: AK final %d counties vs %d NBER (skipping AK)\n",
+                nrow(final), n_nber))
+    return(data.table())
+  }
   data.table(nber_st = nber_st_code, nber_co = nber_cos, fips = final$fips)
 }
 
@@ -343,17 +379,8 @@ nber[, cause := fcase(
   default = "other"
 )]
 
-# Map NBER age bins → pop age bins for age adjustment
-# NBER bins: 1-4, 5-14, 15-24, 25-34, 35-44, 45-54, 55-64, 65-74, 75-84, 85+
-# Pop bins:  <20, 20-59, 60+
-# Note: 15-24 straddles <20/20-59 → assigned to 20-59
-#       55-64 straddles 20-59/60+ → assigned to 20-59
-nber[, pop_age_bin := fcase(
-  age_bin %in% c("1-4", "5-14"), "<20",
-  age_bin %in% c("15-24", "25-34", "35-44", "45-54", "55-64"), "20-59",
-  age_bin %in% c("65-74", "75-84", "85+"), "60+",
-  default = NA_character_
-)]
+# NBER age bins match SEER aggregations exactly — use directly
+nber[, pop_age_bin := age_bin]
 
 cat(sprintf("\n  NBER (mapped): %d rows, years %d-%d, %d counties\n",
             nrow(nber), min(nber$year), max(nber$year), uniqueN(nber$fips)))
@@ -371,11 +398,11 @@ cat("Computing age-adjusted death counts (direct standardization)...\n")
 age_adjust <- function(deaths_age_dt, pop_age_dt, std_pop_dt) {
   merged <- merge(deaths_age_dt, pop_age_dt,
                   by.x = c("fips", "year", "pop_age_bin"),
-                  by.y = c("fips", "year", "age_bin"),
+                  by.y = c("fips", "year", "nber_age_bin"),
                   all.x = TRUE)
   merged <- merged[!is.na(pop) & pop > 0]
   merged[, rate := deaths / pop]
-  merged <- merge(merged, std_pop_dt, by.x = "pop_age_bin", by.y = "age_bin")
+  merged <- merge(merged, std_pop_dt, by.x = "pop_age_bin", by.y = "nber_age_bin")
   merged[, adj := rate * std_pop]
   merged[, .(deaths = sum(adj, na.rm = TRUE)), by = .(fips, year)]
 }
@@ -390,7 +417,7 @@ for (cause_val in c("suicide", "homicide", "alcohol")) {
   adj_list <- list()
   for (rv in c("white", "nonwhite")) {
     d_sub <- d_race_age[race_group == rv, .(fips, year, pop_age_bin, deaths)]
-    p_sub <- pop_race_age[race_group == rv, .(fips, year, age_bin, pop)]
+    p_sub <- pop_race_age[race_group == rv, .(fips, year, nber_age_bin, pop)]
     adj_sub <- age_adjust(d_sub, p_sub, std_pop)
     adj_sub[, race_group := rv]
     adj_list[[rv]] <- adj_sub
@@ -413,10 +440,7 @@ cat(sprintf("  Alcohol:  %.0f age-adjusted deaths\n", sum(alc_deaths$deaths)))
 # STEP 3: Load population, CMHC openings, controls
 # ══════════════════════════════════════════════════════════════════════
 
-cat("Loading population data...\n")
-# pop already loaded in STEP 0 (race_group and age aggregations also computed there)
-pop_race  <- pop[, .(population = sum(pop, na.rm = TRUE)), by = .(fips, year, race_group)]
-pop_total <- pop[, .(population = sum(pop, na.rm = TRUE)), by = .(fips, year)]
+# pop_race, pop_total already computed from SEER in STEP 0
 
 cat("Loading CMHC openings...\n")
 cmhc_openings <- as.data.table(read_csv("cmhc_data/cmhc_openings.csv", show_col_types = FALSE))
@@ -432,14 +456,10 @@ aer_ids <- aer_ids[!(stfips == 36 & cofips == 61) &
                     !(stfips == 6  & cofips == 37) &
                     !(stfips == 17 & cofips == 31)]
 
-pscore <- as.data.table(haven::read_dta("aer_data/aer_pscore_data.dta"))
-pscore[, fips := as.integer(paste0(
-  formatC(as.integer(stfips), width = 2, flag = "0"),
-  formatC(as.integer(cofips), width = 3, flag = "0")
-))]
-pscore_controls <- pscore[, .(fips, `_pctschlt4`, `_pctschlgt12`, `_pctlfue`, `_lfp`,
-                              `_md_per1000`, `_pcturb`)]
-pscore_controls[, urb_qtile := as.factor(dplyr::ntile(`_pcturb`, 5))]
+# 1970 Census controls from NHGIS (replaces 1960 AER pscore controls)
+nhgis <- as.data.table(fst::read_fst("replication/nhgis0003_csv/nhgis_1970_controls.fst"))
+nhgis[, urb_qtile := as.factor(dplyr::ntile(pct_urban, 5))]
+cat(sprintf("  NHGIS 1970 controls: %d counties\n", nrow(nhgis)))
 
 # ══════════════════════════════════════════════════════════════════════
 # STEP 4: Build analysis panels
@@ -470,14 +490,13 @@ build_panel <- function(deaths_dt, cause_label, race_val) {
                  by = "fips", all.x = TRUE)
   panel[, cmhc_post := as.integer(!is.na(cmhc_year_exp) & year >= cmhc_year_exp)]
   panel <- merge(panel, aer_ids[, .(fips, stfips)], by = "fips", all.x = TRUE)
-  panel <- merge(panel, pscore_controls, by = "fips", all.x = TRUE)
+  panel <- merge(panel, nhgis, by = "fips", all.x = TRUE)
 
   panel[, t := year - 1960L]
-  panel[, D_pctschlt4_t   := `_pctschlt4`   * t]
-  panel[, D_pctschlgt12_t := `_pctschlgt12` * t]
-  panel[, D_pctlfue_t     := `_pctlfue`     * t]
-  panel[, D_lfp_t         := `_lfp`         * t]
-  panel[, D_md_t          := `_md_per1000`  * t]
+  panel[, D_pctltHS_t := pct_lt_hs  * t]
+  panel[, D_pctHS_t   := pct_hs     * t]
+  panel[, D_unemp_t   := unemp_rate * t]
+  panel[, D_lfp_t     := lfp_rate   * t]
 
   panel[, log_pop := log(pmax(population, 1))]
   panel <- panel[!is.na(population) & population > 0]
@@ -516,7 +535,7 @@ run_al_poisson <- function(panel, label) {
   cat(sprintf("  %s: %d obs, %.0f deaths\n", label, nrow(panel), sum(panel$deaths)))
   m <- tryCatch(
     fepois(deaths ~ cmhc_post +
-             D_pctschlt4_t + D_pctschlgt12_t + D_pctlfue_t + D_lfp_t + D_md_t
+             D_pctltHS_t + D_pctHS_t + D_unemp_t + D_lfp_t
            | fips + year^urb_qtile + stfips[year],
            data = panel, offset = ~log_pop,
            weights = ~population,
