@@ -13,7 +13,6 @@ panel <- panel %>% mutate(pcrfund_chc = replace_na(pcrfund_chc, 0))
 # --- Baseline ---
 m_base <- feols(
   amr_ad ~ i(event_time_binned, ref = -1) + D_tot_act_md_t + H_bpc
-    + `_60pcturban` + `_pct59inclt3k` + `_60pctnonwhit`
   | fips + year^Durb + year^stfips,
   data = panel, weights = ~popwt_ad, cluster = ~fips
 )
@@ -23,7 +22,6 @@ coef_base$model <- "Baseline"
 # --- Panel A: + CHC per-capita funding control ---
 m_chcfund <- feols(
   amr_ad ~ i(event_time_binned, ref = -1) + pcrfund_chc + D_tot_act_md_t + H_bpc
-    + `_60pcturban` + `_pct59inclt3k` + `_60pctnonwhit`
   | fips + year^Durb + year^stfips,
   data = panel, weights = ~popwt_ad, cluster = ~fips
 )
@@ -89,3 +87,34 @@ p <- p_a / p_b +
 save_fig(p, "fig07_cmhc_chc_robust.pdf", width = 10, height = 11)
 save_csv(coef_a, "fig07_panel_a_coefs.csv")
 save_csv(coef_b, "fig07_panel_b_coefs.csv")
+
+
+
+
+
+
+
+# --- Combined Plot ---
+coef_all <- bind_rows(coef_base, coef_chcfund, coef_horse)
+
+p_c <- ggplot(coef_all, aes(x = event_time, y = coefficient, color = model, fill = model)) +
+      geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+      geom_vline(xintercept = -0.5, linetype = "dashed", color = "gray50") +
+      geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.1, color = NA) +
+      geom_point(size = 2, position = position_dodge(0.4)) +
+      geom_line(linewidth = 0.8, position = position_dodge(0.4)) +
+      scale_color_manual(values = c("Baseline" = "steelblue", 
+        "+ CHC Funding Control" = "darkorange", 
+        "Horse Race (+ CHC Event Time)" = "forestgreen")) +
+  scale_fill_manual(values = c("Baseline" = "steelblue", 
+        "+ CHC Funding Control" = "darkorange", 
+        "Horse Race (+ CHC Event Time)" = "forestgreen")) +
+  labs(title = "A. Controlling for CHC Per-Capita Funding",
+       x = "Years Relative to CMHC Opening",
+       y = "Change in Deaths per 100,000",
+       color = NULL, fill = NULL) +
+  theme_paper()
+
+
+save_fig(p_c, "fig07_cmhc_chc_robust.pdf", width = 10, height = 6)
+

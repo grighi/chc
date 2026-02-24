@@ -60,6 +60,7 @@ save_csv(bal_df, "table01_balance.csv")
 # Generate LaTeX table shell
 tex_lines <- c(
   "\\begin{table}[htbp]",
+  "\\label{tab:balance}",
   "\\centering",
   "\\caption{Balance Table: CMHC Counties vs.\\ Non-CMHC Counties, 1960 Characteristics}",
   "\\label{tab:balance}",

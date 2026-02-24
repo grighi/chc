@@ -30,7 +30,7 @@ cause_results <- lapply(names(cause_vars), function(v) {
 
   tryCatch({
     fml <- as.formula(sprintf(
-      "%s ~ i(event_time_binned, ref = -1) + D_tot_act_md_t + H_bpc + `_60pcturban` + `_pct59inclt3k` + `_60pctnonwhit` | fips + year^Durb + year^stfips",
+      "%s ~ i(event_time_binned, ref = -1) + D_tot_act_md_t + H_bpc | fips + year^Durb + year^stfips",
       v
     ))
     m <- feols(fml, data = panel, weights = ~popwt_ad, cluster = ~fips)

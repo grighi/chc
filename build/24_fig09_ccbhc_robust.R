@@ -69,12 +69,12 @@ if (!is.null(coef_b)) {
   plots <- c(plots, list(p_b))
 }
 
-p <- wrap_plots(plots, ncol = 1) +
+p <- wrap_plots(plots, ncol = 2) +
   plot_annotation(
     title = "CCBHC Mortality Robustness",
     theme = theme(plot.title = element_text(face = "bold", size = 13))
   )
 
-save_fig(p, "fig09_ccbhc_robust.pdf", height = 5 * length(plots))
+save_fig(p, "fig09_ccbhc_robust.pdf", height = 5)
 save_csv(coef_a, "ccbhc_rob_no_waiver_coefs.csv")
 if (!is.null(coef_b)) save_csv(coef_b, "ccbhc_rob_planning_coefs.csv")

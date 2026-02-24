@@ -7,6 +7,12 @@ log_section("07: National Mortality Time Series")
 
 outfile <- file.path(DATA_DIR, "national_mortality.parquet")
 
+nber_years = list(
+    `0` = 1970, `1` = 1971, `2` = 1972, `3` = 1973, `4` = 1974, `5` = 1975, `6` = 1976, `7` = 1977, `8` = 1978,
+    `79` = 1979, `80` = 1980, `81` = 1981, `82` = 1982, `83` = 1983, `84` = 1984, `85` = 1985, `86` = 1986, `87` = 1987,
+    `88` = 1988, `89` = 1989, `90` = 1990, `91` = 1991, `92` = 1992, `93` = 1993, `94` = 1994, `95` = 1995)
+
+
 if (file.exists(outfile) && !FORCE_REBUILD) {
   cat("  Output exists, skipping.\n")
 } else {
@@ -17,6 +23,11 @@ if (file.exists(outfile) && !FORCE_REBUILD) {
 
   if (file.exists(nber_file)) {
     nber <- arrow::read_parquet(nber_file) %>% as.data.table()
+    nber[, year := as.integer(year)]
+    # replace year with nber_years mapping
+    nber[as.character(year) %in% names(nber_years), 
+      year := as.integer(nber_years[as.character(year)])]
+    nber <- nber[!is.na(year) & year >= 1959 & year <= 2004]
     cat(sprintf("  NBER counts: %d rows, years %d-%d\n",
                 nrow(nber), min(nber$year), max(nber$year)))
 
@@ -26,13 +37,13 @@ if (file.exists(outfile) && !FORCE_REBUILD) {
     all_ages  <- c("0", "1-4", "5-14", age_20_49, age_50p)
 
     # Aggregate by year and age group
-    nber_ad <- nber[age_bin %in% age_20_49, .(deaths = sum(count, na.rm = TRUE)), by = year]
+    nber_ad <- nber[age_bin %in% age_20_49, .(deaths = sum(deaths, na.rm = TRUE)), by = year]
     nber_ad[, age_group := "20-49"]
 
-    nber_eld <- nber[age_bin %in% age_50p, .(deaths = sum(count, na.rm = TRUE)), by = year]
+    nber_eld <- nber[age_bin %in% age_50p, .(deaths = sum(deaths, na.rm = TRUE)), by = year]
     nber_eld[, age_group := "50+"]
 
-    nber_all <- nber[age_bin %in% all_ages, .(deaths = sum(count, na.rm = TRUE)), by = year]
+    nber_all <- nber[age_bin %in% all_ages, .(deaths = sum(deaths, na.rm = TRUE)), by = year]
     nber_all[, age_group := "all"]
 
     nber_nat <- rbindlist(list(nber_ad, nber_eld, nber_all))
@@ -73,42 +84,97 @@ if (file.exists(outfile) && !FORCE_REBUILD) {
     nber_nat[, rate := deaths / population * 100000]
   }
 
-  # --- 3. WONDER data for 1999-2023 ---
-  # Check for pre-pulled WONDER parquet files
-  wonder_files <- list.files(file.path(WONDER_DIR, "data"), pattern = "\\.parquet$",
-                              full.names = TRUE)
-
+  # --- 3. WONDER data for 1999-2025 (ages 20-49 all-cause + external causes) ---
   wonder_nat <- NULL
-  if (length(wonder_files) > 0) {
-    cat(sprintf("  Found %d WONDER parquet files\n", length(wonder_files)))
-    # Try to use the county-level files to compute national totals
-    # Or use directly if they contain national aggregates
-    tryCatch({
-      # Read all wonder files and aggregate to national level
-      wonder_all <- lapply(wonder_files, function(f) {
-        tryCatch(arrow::read_parquet(f), error = function(e) NULL)
-      })
-      wonder_all <- Filter(Negate(is.null), wonder_all)
-      if (length(wonder_all) > 0) {
-        cat("  WONDER data loaded for national aggregation\n")
-      }
-    }, error = function(e) {
-      cat(sprintf("  Note: Could not load WONDER parquet files: %s\n", e$message))
-    })
+  
+  # All-cause mortality (ages 20-49)
+  all_final <- file.path(WONDER_DIR, "data/alladults.parquet")
+  all_prov  <- file.path(WONDER_DIR, "data/alladults_provisional.parquet")
+  
+  wonder_all_parts <- list()
+  if (file.exists(all_final)) {
+    d <- arrow::read_parquet(all_final) %>% as.data.table()
+    d[, year := as.integer(Year)]
+    wonder_all_parts[["final"]] <- d[, .(deaths = sum(as.numeric(Deaths), na.rm = TRUE),
+                                          population = sum(as.numeric(Population), na.rm = TRUE)), by = year]
+    cat(sprintf("  WONDER all-cause final: %d years (%d-%d)\n",
+                uniqueN(d$year), min(d$year), max(d$year)))
+  }
+  if (file.exists(all_prov)) {
+    d <- arrow::read_parquet(all_prov) %>% as.data.table()
+    d[, year := as.integer(Year)]
+    wonder_all_parts[["prov"]] <- d[, .(deaths = sum(as.numeric(Deaths), na.rm = TRUE),
+                                         population = sum(as.numeric(Population), na.rm = TRUE)), by = year]
+    cat(sprintf("  WONDER all-cause prov: %d years (%d-%d)\n",
+                uniqueN(d$year), min(d$year), max(d$year)))
+  }
+  
+  if (length(wonder_all_parts) > 0) {
+    wonder_all <- rbindlist(wonder_all_parts, idcol = "source")
+    wonder_all <- wonder_all[order(year, match(source, c("final", "prov")))]
+    wonder_all <- unique(wonder_all, by = "year", fromLast = FALSE)
+    wonder_all[, source := NULL]
+    wonder_all[, `:=`(rate = deaths / population * 100000,
+                      age_group = "20-49",
+                      source = "WONDER")]
+    
+    # External causes (DoD)
+    dod_final <- file.path(WONDER_DIR, "data/dod_alladults.parquet")
+    dod_prov  <- file.path(WONDER_DIR, "data/dod_alladults_provisional.parquet")
+    
+    dod_parts <- list()
+    if (file.exists(dod_final)) {
+      d <- arrow::read_parquet(dod_final) %>% as.data.table()
+      d[, year := as.integer(Year)]
+      dod_parts[["final"]] <- d[, .(deaths = sum(as.numeric(Deaths), na.rm = TRUE),
+                                     population = sum(as.numeric(Population), na.rm = TRUE)), by = year]
+    }
+    if (file.exists(dod_prov)) {
+      d <- arrow::read_parquet(dod_prov) %>% as.data.table()
+      d[, year := as.integer(Year)]
+      dod_parts[["prov"]] <- d[, .(deaths = sum(as.numeric(Deaths), na.rm = TRUE),
+                                    population = sum(as.numeric(Population), na.rm = TRUE)), by = year]
+    }
+    
+    if (length(dod_parts) > 0) {
+      wonder_dod <- rbindlist(dod_parts, idcol = "source")
+      wonder_dod <- wonder_dod[order(year, match(source, c("final", "prov")))]
+      wonder_dod <- unique(wonder_dod, by = "year", fromLast = FALSE)
+      wonder_dod[, source := NULL]
+      wonder_dod[, `:=`(rate = deaths / population * 100000,
+                        age_group = "external",
+                        source = "WONDER")]
+      
+      wonder_nat <- rbindlist(list(wonder_all, wonder_dod), use.names = TRUE)
+      cat(sprintf("  WONDER combined: %d rows (all-cause + external)\n", nrow(wonder_nat)))
+    } else {
+      wonder_nat <- wonder_all
+      cat("  WONDER all-cause only (no external causes data)\n")
+    }
   }
 
   # --- 4. Combine and reconcile ---
+  parts <- list()
+  
   if (!is.null(nber_nat)) {
-    # Use NBER for 1959-1998
-    nat_series <- nber_nat[year <= 1998 & !is.na(rate),
-                            .(year, age_group, deaths, population, rate, source)]
-
-    # For 1999+, prefer WONDER if available, else use NBER through 2004
-    nber_1999 <- nber_nat[year >= 1999 & !is.na(rate),
-                           .(year, age_group, deaths, population, rate, source)]
-    nat_series <- rbindlist(list(nat_series, nber_1999))
+    # Use NBER for 1959-1998 (20-49 age group only)
+    parts[["nber"]] <- nber_nat[year <= 1998 & age_group == "20-49" & !is.na(rate),
+                                  .(year, age_group, deaths, population, rate, source)]
+  }
+  
+  if (!is.null(wonder_nat)) {
+    # WONDER for 1999+
+    parts[["wonder"]] <- wonder_nat[year >= 1999 & !is.na(rate),
+                                      .(year, age_group, deaths, population, rate, source)]
+  } else if (!is.null(nber_nat)) {
+    # Fallback: use NBER through 2004 if no WONDER
+    parts[["nber_late"]] <- nber_nat[year >= 1999 & year <= 2004 & age_group == "20-49" & !is.na(rate),
+                                       .(year, age_group, deaths, population, rate, source)]
+  }
+  
+  if (length(parts) > 0) {
+    nat_series <- rbindlist(parts, use.names = TRUE)
   } else {
-    # Fallback: empty
     nat_series <- data.table(year = integer(), age_group = character(),
                               deaths = numeric(), population = numeric(),
                               rate = numeric(), source = character())

@@ -34,7 +34,7 @@ coef_list <- lapply(outcomes, function(o) {
     return(NULL)
   }
   fml <- as.formula(sprintf(
-    "%s ~ i(event_time_binned, ref = -1) + D_tot_act_md_t + H_bpc + `_60pcturban` + `_pct59inclt3k` + `_60pctnonwhit` | fips + year^Durb + year^stfips",
+    "%s ~ i(event_time_binned, ref = -1) + D_tot_act_md_t + H_bpc | fips + year^Durb + year^stfips",
     o$var
   ))
   m <- feols(fml, data = panel, weights = as.formula(paste0("~", wt_var)), cluster = ~fips)

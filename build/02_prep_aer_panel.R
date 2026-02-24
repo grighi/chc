@@ -143,7 +143,7 @@ if (file.exists(outfile) && !FORCE_REBUILD) {
     inc <- fst::read_fst(inc_file, as.data.table = TRUE)
     inc_annual <- inc[, .(
       jail_rate        = mean(total_jail_pop_rate, na.rm = TRUE),
-      bl_jail_rate     = mean(black_incarceration_rate, na.rm = TRUE),
+      bl_jail_rate     = mean(black_jail_pop_rate, na.rm = TRUE),
       jail_pop_per_cap = mean(jail_pop_per_capita, na.rm = TRUE)
     ), by = .(fips, year)]
     inc_annual[, fips := as.integer(fips)]

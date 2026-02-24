@@ -8,7 +8,6 @@ panel <- arrow::read_parquet(file.path(DATA_DIR, "cmhc_panel.parquet"))
 
 model_es_eld <- feols(
   amr_eld ~ i(event_time_binned, ref = -1) + D_tot_act_md_t + H_bpc
-    + `_60pcturban` + `_pct59inclt3k` + `_60pctnonwhit`
   | fips + year^Durb + year^stfips,
   data = panel,
   weights = ~popwt_eld,

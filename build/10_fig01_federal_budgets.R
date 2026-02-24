@@ -7,19 +7,42 @@ log_section("10: Figure 1 — Federal Budgets")
 
 budgets <- read_csv(file.path(FED_DIR, "mental_health_budgets.csv"), show_col_types = FALSE)
 
-mh_programs <- c("Early CMHC", "ADAMHA Mental Health", "ADMS Block Grant",
-                 "Mental Health Block Grant", "Mental Health")
+mh_programs <- c("Early CMHC", "ADAMHA Mental Health",
+                 "ADMS Block Grant", "Mental Health Block Grant", "Mental Health Block Grant6",
+                 "CCBHC Program6")
+
+group_map <- c(
+  "Early CMHC"                 = "CMHC Funding",
+  "ADAMHA Mental Health"       = "CMHC Funding",
+  "ADMS Block Grant"           = "Mental Health Block Grant",
+  "Mental Health Block Grant"  = "Mental Health Block Grant",
+  "Mental Health Block Grant6" = "Mental Health Block Grant",
+  "CCBHC Program6"             = "CCBHC Program Funding"
+)
 
 mh <- budgets %>%
   filter(program %in% mh_programs) %>%
-  mutate(amount_millions = case_when(
-    unit == "thousands" ~ amount / 1000,
-    unit == "millions"  ~ amount,
-    TRUE ~ amount
-  )) %>%
-  select(program, year, amount_millions) %>%
-  group_by(program, year) %>%
-  summarize(amount_millions = mean(amount_millions, na.rm = TRUE), .groups = "drop")
+  mutate(
+    # Two CSV layouts exist:
+    #  Old (with line_code): year=fiscal_year, amount=numeric, unit=unit_label
+    #  New (no line_code):   budget_year=fiscal_year, estim=numeric, amount=unit_label
+    year_num    = suppressWarnings(as.integer(year)),
+    estim_num   = suppressWarnings(as.numeric(estim)),
+    amount_num  = suppressWarnings(as.numeric(amount)),
+    fiscal_year = if_else(!is.na(year_num), year_num, as.integer(budget_year)),
+    raw_amount  = if_else(!is.na(amount_num), amount_num, estim_num),
+    raw_unit    = if_else(!is.na(amount_num), unit, amount),
+    amount_millions = case_when(
+      raw_unit == "thousands" ~ raw_amount / 1000,
+      raw_unit == "millions"  ~ raw_amount,
+      TRUE ~ raw_amount
+    ),
+    group = group_map[program]
+  ) %>%
+  filter(!is.na(amount_millions)) %>%
+  select(group, year = fiscal_year, amount_millions) %>%
+  group_by(group, year) %>%
+  summarize(amount_millions = max(amount_millions, na.rm = TRUE), .groups = "drop")
 
 # Fetch CPI-U from FRED (with fallback)
 cpi_url <- "https://fred.stlouisfed.org/graph/fredgraph.csv?bgcolor=%23e1e9f0&chart_type=line&drp=0&fo=open%20sans&graph_bgcolor=%23ffffff&height=450&mode=fred&recession_bars=on&txtcolor=%23444444&ts=12&tts=12&width=1168&nt=0&thu=0&trc=0&show_legend=yes&show_axis_titles=yes&show_tooltip=yes&id=CPIAUCSL&scale=left&cosd=1947-01-01&coed=2025-01-01&line_color=%234572a7&link_values=false&line_style=solid&mark_type=none&mw=3&lw=2&ost=-99999&oet=99999&mma=0&fml=a&fq=Annual&fam=avg&fgst=lin&fgsnd=2020-02-01&line_index=1&transformation=lin&vintage_date=2026-02-11&revision_date=2026-02-11&nd=1947-01-01"
@@ -47,22 +70,22 @@ if (!is.null(cpi_raw)) {
 cpi_2023 <- cpi %>% filter(year == 2023) %>% pull(cpi)
 cpi <- cpi %>% mutate(deflator = cpi_2023 / cpi)
 
+group_levels <- c("CMHC Funding", "Mental Health Block Grant", "CCBHC Program Funding")
+
 mh <- mh %>%
   left_join(cpi, by = "year") %>%
   mutate(
     amount_real_2023 = amount_millions * deflator,
-    program = factor(program, levels = mh_programs)
+    group = factor(group, levels = group_levels)
   )
 
 program_colors <- c(
-  "Early CMHC"                = "#1b7837",
-  "ADAMHA Mental Health"      = "#2166ac",
-  "ADMS Block Grant"          = "#67a9cf",
-  "Mental Health Block Grant" = "#ef8a62",
-  "Mental Health"             = "#b2182b"
+  "CMHC Funding"               = "#1b7837",
+  "Mental Health Block Grant"  = "#ef8a62",
+  "CCBHC Program Funding"      = "#b2182b"
 )
 
-p <- ggplot(mh, aes(x = year, y = amount_real_2023, color = program)) +
+p <- ggplot(mh, aes(x = year, y = amount_real_2023, color = group)) +
   # Shaded eras
   annotate("rect", xmin = 1963, xmax = 1981, ymin = -Inf, ymax = Inf,
            fill = "#2166ac", alpha = 0.05) +
@@ -85,10 +108,10 @@ p <- ggplot(mh, aes(x = year, y = amount_real_2023, color = program)) +
     color = "Program"
   ) +
   theme_paper(base_size = 13) +
-  guides(color = guide_legend(nrow = 2))
+  guides(color = guide_legend(nrow = 2, byrow = TRUE))
 
 save_fig(p, "fig01_federal_budgets.pdf", width = 11, height = 7)
 
 # Save underlying data
-save_csv(mh %>% select(program, year, amount_millions, amount_real_2023),
+save_csv(mh %>% select(group, year, amount_millions, amount_real_2023),
          "fig01_federal_budgets.csv")

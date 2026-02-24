@@ -17,7 +17,6 @@ panel <- panel %>%
 tryCatch({
   m_pois <- fepois(
     deaths_ad ~ i(event_time_binned, ref = -1) + D_tot_act_md_t + H_bpc
-      + `_60pcturban` + `_pct59inclt3k` + `_60pctnonwhit`
     | fips + year^Durb + year^stfips,
     data = panel,
     offset = ~log_pop_ad,

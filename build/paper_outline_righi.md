@@ -1,8 +1,6 @@
 # OUTLINE: "Community Mental Health Centers: Then and Now"
 ## Gio Righi, UCLA
 
-### Target: Top-5 Journal (AER, QJE, JPE, Econometrica, REStud)
-
 
 ---
 

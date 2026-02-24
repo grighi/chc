@@ -15,37 +15,45 @@ if (!file.exists(nat_file)) {
     cat("  WARNING: Empty national mortality data. Skipping.\n")
   } else {
 
-    nat_plot <- nat[age_group %in% c("20-49", "50+") & !is.na(rate)]
+    # Plot ages 20-49 all-cause and external causes with dual axes
+    nat_plot <- nat[age_group %in% c("20-49", "external") & !is.na(rate)][year < 2025]
+    
+    # Separate into two series for dual-axis plotting
+    nat_all <- nat_plot[age_group == "20-49"][, age_group := "All causes"]
+    nat_dod <- nat_plot[age_group == "external"][, age_group := "External causes"]
 
-    p_a <- ggplot(nat_plot[age_group == "50+"], aes(x = year, y = rate)) +
+    p <- ggplot() +
       annotate("rect", xmin = 1963, xmax = 1981, ymin = -Inf, ymax = Inf,
                fill = "#2166ac", alpha = 0.08) +
-      annotate("rect", xmin = 2017, xmax = max(nat_plot$year), ymin = -Inf, ymax = Inf,
-               fill = "#b2182b", alpha = 0.08) +
-      geom_line(color = "steelblue", linewidth = 1) +
-      labs(title = "A. Ages 50+", x = NULL, y = "Deaths per 100,000") +
-      theme_paper()
-
-    p_b <- ggplot(nat_plot[age_group == "20-49"], aes(x = year, y = rate)) +
-      annotate("rect", xmin = 1963, xmax = 1981, ymin = -Inf, ymax = Inf,
-               fill = "#2166ac", alpha = 0.08) +
-      annotate("rect", xmin = 2017, xmax = max(nat_plot$year), ymin = -Inf, ymax = Inf,
-               fill = "#b2182b", alpha = 0.08) +
-      geom_line(color = "darkred", linewidth = 1) +
-      labs(title = "B. Ages 20-49", x = "Year", y = "Deaths per 100,000") +
-      theme_paper()
-
-    p <- p_a / p_b +
-      plot_annotation(
-        title = "National Mortality Trends by Age Group",
+      annotate("rect", xmin = 2017, xmax = max(nat_plot$year, na.rm = TRUE), ymin = -Inf, ymax = Inf,
+           fill = "#b2182b", alpha = 0.08) +
+      # All-cause mortality on left axis
+      geom_line(data = nat_all, aes(x = year, y = rate, color = "All causes", linetype = "All causes"),
+            linewidth = 1.2) +
+      # External causes on right axis (scaled relative to DoD values)
+      geom_line(data = nat_dod, aes(x = year, y = rate * 8, color = "External causes (DoD)", linetype = "External causes (DoD)"),
+        linewidth = 1.2, linetype = "dotted") +
+      scale_color_manual(values = c("All causes" = "steelblue", "External causes (DoD)" = "darkred")) +
+      scale_linetype_manual(values = c("All causes" = "solid", "External causes (DoD)" = "dashed")) +
+      scale_y_continuous(
+        name = "All-cause deaths per 100,000",
+        sec.axis = sec_axis(~ . / 8, name = "External causes per 100,000")
+      ) +
+      labs(
+        title = "National Mortality Trends: Ages 20-49",
         subtitle = "Shaded regions: CMHC era (blue) and CCBHC era (red)",
-        theme = theme(
-          plot.title = element_text(face = "bold", size = 14),
-          plot.subtitle = element_text(size = 11, color = "gray30")
-        )
+        x = "Year",
+        color = NULL,
+        linetype = NULL
+      ) +
+      theme_paper() +
+      theme(
+        axis.title.y.right = element_text(color = "darkred"),
+        axis.text.y.right = element_text(color = "darkred"),
+        legend.position = "bottom"
       )
 
-    save_fig(p, "fig02_national_mortality.pdf", width = 10, height = 10)
+    save_fig(p, "fig02_national_mortality.pdf", width = 10, height = 6)
     save_csv(nat_plot, "fig02_national_mortality.csv")
   }
 }

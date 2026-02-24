@@ -60,6 +60,7 @@ source("build/28_appendix_poisson.R")
 source("build/29_appendix_bacon.R")
 source("build/30_appendix_ccbhc_placebo.R")
 source("build/31_appendix_dod_decomp.R")
+source("build/32_fig_ccbhc_es_dod.R")
 
 # ── Generate LaTeX tables from CSV outputs ──
 cat("\n========== GENERATING LATEX TABLES ==========\n\n")

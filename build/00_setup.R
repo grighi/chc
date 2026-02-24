@@ -62,8 +62,8 @@ AER_DIR     <- file.path(ROOT, "aer_data")
 CMHC_DIR    <- file.path(ROOT, "cmhc_data")
 CCBHC_DIR   <- file.path(ROOT, "ccbhc")
 FED_DIR     <- file.path(ROOT, "federal_budgets")
-NBER_DIR    <- file.path(ROOT, "nber_mortality")
-WONDER_DIR  <- file.path(ROOT, "wonder_mortality")
+NBER_DIR    <- file.path(ROOT, "raw", "nber_mortality")
+WONDER_DIR  <- file.path(ROOT, "raw", "wonder_mortality")
 
 # Ensure output directories exist
 for (d in c(DATA_DIR, FIG_DIR, TABLE_DIR, CSV_DIR, LOG_DIR)) {
@@ -71,7 +71,7 @@ for (d in c(DATA_DIR, FIG_DIR, TABLE_DIR, CSV_DIR, LOG_DIR)) {
 }
 
 # ── CMHC-era parameters ────────────────────────────────────────────────────
-CMHC_MAX_COHORT   <- 1975L
+CMHC_MAX_COHORT   <- 1981L
 CMHC_PANEL_END    <- 1988L
 CMHC_EVENT_MIN    <- -6L
 CMHC_EVENT_MAX    <- 20L

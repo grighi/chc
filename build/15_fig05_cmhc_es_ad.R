@@ -9,8 +9,7 @@ panel <- arrow::read_parquet(file.path(DATA_DIR, "cmhc_panel.parquet"))
 # Main specification
 model_es_ad <- feols(
   amr_ad ~ i(event_time_binned, ref = -1) + D_tot_act_md_t + H_bpc
-    + `_60pcturban` + `_pct59inclt3k` + `_60pctnonwhit`
-  | fips + year^Durb + year^stfips,
+  | fips + year + year^Durb + year^stfips,
   data = panel,
   weights = ~popwt_ad,
   cluster = ~fips
@@ -38,6 +37,8 @@ p <- plot_event_study(
   xlab = "Years Relative to CMHC Opening"
 )
 
+print(p)
+
 save_fig(p, "fig05_cmhc_es_ad.pdf")
 save_csv(coef_df, "cmhc_es_ad_coefs.csv")
 
@@ -47,3 +48,4 @@ post <- coef_df %>% filter(event_time >= 0)
 cat(sprintf("    Mean coefficient: %.3f\n", mean(post$coefficient)))
 cat(sprintf("    Min coefficient:  %.3f (t=%d)\n",
             min(post$coefficient), post$event_time[which.min(post$coefficient)]))
+

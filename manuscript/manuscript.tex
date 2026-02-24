@@ -1,0 +1,318 @@
+\documentclass[11pt]{article}
+
+% ---------- Packages ----------
+\usepackage[margin=1.1in]{geometry}
+\usepackage{setspace}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{microtype}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{lipsum} % lorem ipsum
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{xcolor, soul}
+
+\doublespacing
+
+
+
+% ---------- Title ----------
+\title{\vspace{-1cm}
+{\Large \textbf{Community Mental Health Facilities \\Then and Now}}\\[1.2em]
+\normalsize Chapter 3\\Dissertation Submitted in Partial Fulfillment\\
+of the Requirements for the Degree of Doctor of Philosophy
+}
+
+\author{Gio Righi \\
+Department of Economics \\
+University of California, Los Angeles}
+
+\date{\today}
+
+% ---------- Document ----------
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+
+\vspace{2em}
+
+\begin{abstract}
+\noindent
+
+\end{abstract}
+
+\newpage
+
+
+%./tables
+%./tables/table_ccbhc_heterogeneity.tex
+%./tables/table03_cause_decomp_cmhc_shell.tex
+%./tables/table01_balance_shell.tex
+%./tables/table03_cause_decomp_cmhc.tex
+%./tables/table_cmhc_incarceration_ld_shell.tex
+%./tables/table_ccbhc_heterogeneity_shell.tex
+%./tables/table_appendix_poisson_shell.tex
+%./tables/table01_balance.tex
+%./tables/table_appendix_poisson.tex
+%./tables/table02_dd_robustness_shell.tex
+%./tables/table02_dd_robustness.tex
+%./tables/table_cmhc_incarceration_ld.tex
+%./figures
+%./figures/fig10_ccbhc_es_inc.pdf
+%./figures/fig_ccbhc_es_dod.pdf
+%./figures/fig07_cmhc_chc_robust.pdf
+%./figures/fig_appendix_poisson.pdf
+%./figures/fig09_ccbhc_robust.pdf
+%./figures/fig_side_by_side.pdf
+%./figures/fig06_cmhc_es_eld.pdf
+%./figures/fig04_timing_exogeneity.pdf
+%./figures/fig05_cmhc_es_ad.pdf
+%./figures/fig_cmhc_race.pdf
+%./figures/fig_ccbhc_dod_decomp.pdf
+%./figures/fig_cmhc_heterogeneity.pdf
+%./figures/fig02_national_mortality.pdf
+%./figures/fig08_ccbhc_es_mort.pdf
+%./figures/fig03_cmhc_rollout_map.pdf
+%./figures/fig01_federal_budgets.pdf
+
+
+
+% ============================================================
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection}{1em}{}
+\section{Introduction}
+
+Federal funding for community mental health treatment has had a turbulent funding and administrative history in the United States. An extensive qualitative literature connects this to the fact that people with serious mental illness (predominately schizophrenia, bipolar, and major depressive disorder), make up a disproportionate share of people experiencing unsheltered homelessness, a population which has been growing in many states for the last decade. While recent evidence shows that Community Health Centers had a substantial impact on the mortality of resource-constrained older Americans, relatively less is known about community mental health services. 
+
+The CMHC program is widely considered a failure (Grob 1991, 1994; Rose 1979) because there was a retrenchment in funding in the 1980s and because people with serious mental illness made up an increasing fraction of people who were incarcerated or experienced homelessness in the ensuing decades.
+%a view reinforced by qualitative accounts tying it to the deinstitutionalization debacle. 
+This narrative shaped policy for decades. Yet the World Health Organization continues to recommend community-based mental health care (WHO 2001), and the federal government has returned to the model with CCBHCs. Quantitative evidence on the impacts of community mental health treatment is thus valuable both for evaluating the historical experiment and for guiding the current expansion.
+
+The only quantitative evidence of CMHCs' mortality effects, Avery and LaVoice (2023), find effects limited to non-white population and restricted to specific causes of death (8\% reduction in non-white suicide, 14\% reduction in non-white homicide). I study all-cause mortality, since CMHCs were targeted to people with serious mental illness who may have also experienced reductions in mortality from chronic conditions exacerbated by their mental illness. Avery and LaVoice also use a functional form that imposes stronger assumptions on the data generating process than the standard two-way fixed effects model.  Furthermore, no study has examined the contemporary CCBHC program. This newer program has important substantive differences relative to the former CMHC model. It adopts a different payment structure and requires several key additional services, including 24/7 crisis services and medication-assisted treatment for opioid use disorder. 
+
+This paper uses the staggered rollout of CMHCs and CCBHCs across U.S. counties to revisit the health impacts of the construction of community mental health facilities during the two significant periods of expansion in the post-WWII period, CMHCs in the 1960s, and CCBHCs in the 2010s. In studying both eras, this paper assesses the impact of a similar model of care across different institutional contexts, funding structures, and disease environments.
+
+I find that the established of a CMHC in a county reduced age-adjusted mortality among 20–49 year olds by approximately 10–12 deaths per 100,000 within a decade, which is a substantial effect given baseline mortality in this age group. Critically, there is no effect among those aged 50 and older, consistent with CMHCs operating through mental health channels rather than cardiovascular and chronic disease channels more relevant to older adults. The effect is robust to controlling for the concurrent rollout of Community Health Centers, whose mortality effects operated through primary care for older Americans (Bailey and Goodman-Bacon 2015).
+
+Turning to the contemporary era, I find that receipt of a federal grant to establish a CCBHC in a county reduced mortality among 25-44 year old by approximately 5-8 deaths per 100,000 within a few years, the most recent years for which we have data. This is driven by differential mortality in the COVID-19 era, indicating that CCBHCs had a protective effect against suicide and overdose mortality. \emph{\textbf{(Still need to properly decompose deaths across types: I decompose this effect across types of mortality to show that it is driven by slower growth in suicide and overdose, rather than COVID-19 mortality, in treated counties.)}} I also find suggestive evidence that CCBHCs reduce local jail populations rates by about 10\%. 
+
+This paper makes three contributions. First, it provides estimates of two major community mental health programs' effects on all-cause mortality, finding effects that are larger than those in prior work focused on narrower cause-specific outcomes. Second, it is the first evaluation of the CCBHC program, documenting that the rebuilt model produces similar health gains and suggestive evidence that it reduces incarceration. Third, by studying both eras, the paper documents that federal investment in community mental health reduces mortality.
+
+% homelessness, incarceration, and deaths of despair
+
+% ============================================================
+\section{Background and History of Community Mental Health Treatment in the United States}
+
+Two eras dominate federal involvement in Community Mental Health Treatment in the US. The first focused on Community Mental Health Centers, starting in 1963 and slowing substantially after 1981. CMHCs built the first infrastructure for community mental health. The second focused on Certified Community Behavioral Health Centers and started in 2014. In this second era, CCBHCs have established new standards and a more sustainable payment model.
+
+\subsection{The First Era: Community Mental Health Centers (1963-1981)}
+
+\begin{figure}
+\includegraphics[width=\textwidth]{../build/output/figures/fig01_federal_budgets.pdf}
+\caption{Federal Funding for Community Mental Health Programs, 1965-2025.}
+\label{fig:budgets}
+\end{figure}
+
+%% CJ Documents give yearly MHBG amounts in recent years
+% https://www.samhsa.gov/sites/default/files/samhsa-fy2016-congressional-justification_2.pdf
+%% CCBHC Funding history
+% https://www.samhsa.gov/communities/certified-community-behavioral-health-clinics/history-background
+
+
+In the 1960s, Community Mental Health Centers (CMHC) represented a new community-based service delivery model that aimed to replace institutionalization for people with serious mental illness (SMI), including schizophrenia, bipolar disorder, and major depressive disorder. Prior to this point, serious mental illness had been primarily treated in institutional settings, such as asylums and state mental hospitals. A variety of factors motivated the transition away from that model, including new psychotropic medications (Chlorpromazine) and John F. Kennedy's (JFK) personal connection to serious mental illness. The Community Mental Health Centers Construction Act was signed in 1963, one month prior to the assassination of JFK, and fit the community-based expansion of health services that was central to the War on Poverty. Figure \ref{fig:budgets} shows the change in federal budgets devoted to community mental health services in that era. Construction grants between 1965 and 1968 allowed for the building of many centers.
+
+Although CMHCs were intended to reduce the institutionalization of people with SMI, they also provided a rapid expansion of other outpatient mental health services. The law required centers to provide five essential services: inpatient, outpatient, emergency, partial hospitalization, and consultation and education. This meant they were able to offer services to treat a variety of conditions including anxiety, mild-to-moderate depression, family conflict, childhood behavioral challenges, or substance use issues. One of the critiques that emerged in the ensuing years is that by providing services to the "worried well," the Centers were straying from their original mission of treating people with SMI. In their approach to being accessible to all people in the community regardless of ability to pay, CMHCs mirrored CHCs. Grant making from the federal government shifted from supporting construction to supporting staffing through the 1970s. 
+
+Funding for CMHCs was dramatically reduced in 1981 through the Omnibus Budget Reconciliation Act. This converted CMHC funding to the Mental Health Services Block Grant and cut its funding by 25\%, reducing the program's growth and federal standardization of services (citex Culhane). By this time, 761 of the planned 2,000 centers had been built. A vast qualitative literature emphasizes that CMHCs were unable to serve people with SMI, and that they were not designed or equipped to treat this population. Many continued to live in the community with reduced services, and large fractions of the population served by centers likely moved into homelessness and incarceration. Raphael and Stoll (citex Raph) find some evidence that it contributed to the subsequent rise in incarcerated populations. Bronson and Berzofsky (citex Bronson) find that in 2012, 26\% of people in jails met the threshold for serious psychological distress.
+
+Several important differences between CHCs and CMHCs contributed to differences in the sustainability of their programs. CHCs had a simple goal–the provision of primary care–with a dominant funding source in Medicaid, while CMHCs had both goals of reducing institutionalization and of increasing outpatient mental health services. The CHC funding model aligned more clearly with Medicaid, while CMHC saw many patients that were uninsured or had to provide services that were not billable under Medicaid. While CMHCs experienced cuts in funding, CHCs evolved into Federally Qualified Health Centers which improved their funding stability through Medicaid Prospective Payment System (PPS) reimbursement and Section 330 grants. 
+
+% Community treatment proved challenging both because it was more complex than medical primary care and because the staff of CMHCs experienced competing demand from other people. %CMHCs were intended to provide services to people with serious mental illness who were leaving institutions, but they also start offering services to the broader community. Thus the scope of work for CMHCs was considerably less unified than those provided by CHCs. Centers needed to provide for the "health, housing, and jobs" of people who had been formerly institutionalized (cite Grob). Furthermore, once psychiatric services became available in the community, there was great demand for services by people who had not been residents of psychiatric hospitals. 
+% Not sure if the following claim is valid.
+% This lack of cohesion eroded the support around their mission. During the 1970s, First Lady Rosalyn Carter supported 
+
+% Community Mental Health Centers have not had a line item in the federal budget since 1980, when it was converted to the Mental Health Services Block Grant
+
+% Their parent agency was transferred from HEW to the Health Services and Mental Health Agency (HSMHA) in 1966, to the Alcohol, Drug Abuse, and Mental Health Administration (ADAMHA) in 1973, to the Substance Abuse and Mental Health Organization (SAMHSA) in 1992, where it remains to the present. They experienced a period of significant growth from the mid-1960s to late 1970s. Their funding was nearly doubled by the Mental Health Systems Act signed by President Carter in 1980, but instead, their funding was cut in nominal terms the following year by the funding's conversion to the Mental Health Block Grant by President Reagan.
+
+% SAMHSA today says that they target adults with serious mental illness and children with serious emotional disturbances.
+
+\begin{figure}
+\includegraphics[width=\textwidth]{../build/output/figures/fig02_national_mortality.pdf}
+\caption{National mortality trends for ages 20--49: all-cause and external causes (deaths of despair), 1959--2025.}
+\end{figure} 
+
+
+\subsection{The Second Era: Certified Community Behavioral Health Centers (2014-Present)}
+
+A second era of federal investment in community mental health was initiated by federal legislation in 2014. This created the CCBHC demonstration program. Rather than providing seed money for construction, the Act permitted CCBHCs to receive funding through the Medicaid PPS, mirroring the federal funding model that has stabilized FQHCs.  They also added additional treatment requirements, including 24/7 crisis services and medication for opioid use disorder. The initial demonstration program began in 2017 with eight states, and subsequent expansions involved counties applying for funding directly from the Substance Abuse and Mental Health Services Agency (SAMHSA).
+
+The second era overlaps with a period when several literatures were increasingly becoming aware of so-called ``deaths of despair.'' \hl{Finish this paragraph.}
+
+\subsection{Existing Work on Community Mental Health Facilities}
+
+There is relatively little quantitative work on the impact of CMHCs. Table \ref{tab:balance} shows that cross-sectional evidence is insufficient for estimating these effects. As was the case for CHCs, counties that received CMHCs were larger, with higher income and schooling. This is consistent with the notion that more affluent areas were able to submit grant proposals to treat their needier residents.
+
+\input{../build/output/tables/table01_balance.tex}
+
+A recent important contribution by Avery and LaVoice (citex Avery) shows some evidence that the rollout of CMHCs reduced mortality primarily for nonwhite adults. They use a sample of 3034 counties and find that homicides decline by 14\% and suicides decline by 8\% after CMHC when estimated on a pooled sample that combines all post-construction years.
+
+My analysis departs from theirs in several ways in an effort to avoid understating the full range of outcomes from CMHC construction. First, I study all-cause mortality rather than only suicide, mortality, and alcoholism. If CMHCs reduce mortality through other channels, such as drug-related deaths, accidents, or complications from untreated mental illness, my specifications will capture these. Second, I restrict to ages 20-49, since mortality among the elderly is dominated by chronic disease and less likely to respond to intervention by CMHCs. Working-age adults are the group most likely to use CMHC services and most at-risk for behavioral health related deaths. Third, I limit treatment to years prior to 1975. Similar to Community Health Centers, priority shifted after 1975 to focus on more rural areas. \emph{\textbf{(Check BGB cite for whether cost shifting impacted MH too.)}} Fourth, my different functional form is based on different assumptions. OLS in a two-way fixed effects regression measures absolute changes that, with population weights, give more influence to large counties with high death counts. The Poisson model assumes that the changes to mortality are proportional. Moreover, the Poisson specification includes more restrictive state linear trends which can absorb nonlinear state-level confounders, as highlighted in Wolfers (citex Wolfers 2006). Fifth, we drop in NYC, LA, and Chicago counties as the impacts in these places dominates in a population-weighted regression. Sixth, the county-level age-adjusted mortality rates used here are constructed from Vital Statistics files, which may be of higher quality than NBER files. Altogether, these differences result in stronger estimates of the impact of CMHCs.
+
+% Skipped these differences:
+% - different data source (NBER)
+% - baseline population weights better track changes than contemporaneous population weights
+% - 1977 CMHCs create a problem - I re-imported these but haven't merged them into the pipeline
+% - different controls
+% - A&L event time window: [-8,-7] (8–9 years before); post-treatment to [12,13].
+
+% The hardest part of this argument is explaining why stronger FEs and better controls would increase the magnitude of the effect rather than attenuate it. The natural story is that A&L's state linear trends are too restrictive and absorb some of the treatment effect (attenuation bias from over-controlling with a misspecified trend), or that your treatment variable captures something A&L's misses.
+
+
+
+% ============================================================
+\section{Data}
+
+
+\begin{figure}
+\includegraphics[width=\textwidth]{../build/output/figures/fig03_cmhc_rollout_map.pdf}
+\caption{Geographic rollout of CMHC establishments across U.S. counties, 1963-1981.}
+\label{fig:map}
+\end{figure}
+
+Data on when and where facilities were established come from several data sources. Data on CMHCs come from federal directories of community mental health centers collected and graciously shared by Avery and LaVoice (2023). The National Institute of Mental Health published directories in 1971, 1973, 1975, 1977, and 1979 listing federally-funded community mental health centers. Figure \ref{fig:map} depicts the timing of the first CMHC opening in a county based on these data. Grant award dates of CCBHCs comes from SAMHSA spending records at usaspending.gov.
+
+Mortality data come from Vital Statistics data that have been aggregated from different sources. In baseline specifications, I use age-adjusted mortality rates from Bailey and Goodman-Bacon (2015) since these are produced from high-quality restricted microdata. For race and cause-of-death decompositions and my replication of Avery and LaVoice (citex AL), I use Multiple Cause of Death Mortality files aggregated by NBER (citex NBER data). For mortality data covering the CCBHC era, I use county-level age adjusted mortality rates from CDC Wonder (citex Wonder). For incarceration data, I use county jail population counts from the Vera Institute of Justice (citex Vera). Harmonized population denominators come from SEER estimates before 2000 (citex SEER) and Census county population datasets after 2000 (citex Cenpop).
+
+\section{Empirical Strategy}
+
+The empirical strategy uses variation in when and where CMHCs and CCBHCs were established to quantify their effects on mortality and incarceration in a flexible event-study framework. The key identifying assumption is that the timing of CMHC or CCBHC establishment is uncorrelated with trends in mortality conditional on county and year fixed effects. For the early period, Avery and LaVoice observe a disconnect between state priority rankings and dates of establishment, providing evidence that the building of CMHCs was uncorrelated with observable characteristics.
+
+\begin{figure}
+\includegraphics[width=\textwidth]{../build/output/figures/fig04_timing_exogeneity.pdf}
+\caption{Timing exogeneity of CMHC funding.}
+\label{fig:exog}
+\end{figure}
+
+Figure \ref{fig:exog} presents evidence that when and where CMHC were established does not depend on mortality before they are established. Panel A shows the relationship between establishment year and pre-period AMR for adults (coefficient 0.729, p-value 0.167), and Panel B shows the relationship between establishment year and the growth rate in pre-period mortality (coefficient 0.398, p-value 0.693). Together, these show that there is no relationship between when a CMHC opened and the mortality rate in the years before.
+
+Furthermore, Avery and LaVoice digitize State Mental Health Plans, which show that states do not target locations with higher baseline mortality. These plans were required to be submitted to the NIMH to apply for construction grants. Although there is little correlation between the priority rankings that states choose and the counties that ultimately received centers, the plans show that states are not targeting areas with high mortality for CMHCs.
+
+The empirical strategy follows a flexible two-way fixed effect specification
+\[ 
+	Y_{jt} = \theta_j + \gamma_{u(j)t} + \delta_{s(j)t} + X_{jt}\beta + \sum_{y=-6}^{-2} \pi_y D_j \mathbf{1}(t -T_j^* = y) + 
+	\sum_{y=0}^{14} \tau_y D_j \mathbf{1}(t - T_j^* = y) + \varepsilon_{jt}.
+\]                       
+Here $Y_{jt}$ is the all-cause age-adjusted mortality rate for adults ages 20–49 in county $j$ in year $t = 1965, \ldots, 1988$. $\theta_j$ is a set of county fixed effects, which absorbs time-invariant differences in observable and unobservable characteristics across counties. $\gamma_{u(j)t}$ is a set of urban-group-by-year fixed effects, where urban groups are defined by quintiles of the county's 1960 share of urban residents. $\delta_{s(j)t}$ is a set of state-by-year fixed effects, which captures time-varying state-level policy changes such as Medicaid implementation. $X_{jt}$ includes the interaction of 1960 county characteristics with linear time trends: total active MDs per capita and hospital beds per capita. $D_j$ is an indicator equal to one if county $j$ ever receives a CMHC by 1975, $T_j^*$ is the year the CMHC first opened, and the omitted category is $y = -1$. The coefficients $\pi_y$ trace out pre-treatment differences in mortality trends between treated and control counties, providing a test of the parallel trends assumption, while $\tau_y$ captures the dynamic treatment effect in each post-treatment year. I weight by 1960 county population ages 20–49 and cluster standard errors at the county level. Counties with CMHC openings after 1975 are assigned to the control group, and New York County, Los Angeles County, and Cook County are excluded.
+
+% On Avery and LaVoice
+The main specifications differ from the one in Avery and LaVoice (2021) in the use of a linear fixed effect difference-in-difference specification rather than a point-poisson model. Although mortality is a count process, our outcome is a population-normalized rate with broad support and few zeros; linear fixed effects models provide a transparent framework for event-study estimation and require only correct specification of the conditional mean under parallel trends, without a proportional treatment effect structure. 
+
+% - they use state linear trends which absorb the pre-trend, rather than TWFE
+
+% - State-by-year FE is strictly more flexible. It absorbs any state-level time-varying confounder nonparametrically, while state linear trends assume confounders evolve linearly. That's a strong assumption during a period with the crack epidemic, deinstitutionalization, and Medicare expansion all evolving nonlinearly. Soon-to-be treated counties had higher elder mortality in the year preceding a CMHCs, masking the pre-trends
+%  - State-by-year FE is the more conservative, more flexible specification
+%  - It honestly reveals where parallel trends hold (adults) and where they don't (elderly)
+%  - The adult (20-49) result is clean in both specs, which is a strength
+%  - 1960 population weights are less endogenous than current-year weights
+%  - OLS on rates is standard in B&GB (2015) and the broader literature
+
+
+\subsection{Identification}
+
+The empirical strategy uses variation in the timing and location of CMHC/CCBHC establishment within a flexible event-study framework. The key identifying assumption is that, conditional on county and year fixed effects plus controls, the timing of CMHC or CCBHC establishment is uncorrelated with trends in mortality. State plans show that mortality was considered in the priority rankings of where CMHCs were to be built, and yet the centers that were constructed did not align with these priority rankings (Avery and LaVoice 2023).
+
+
+% administrative confusion in the rollout process (Comptroller General 1971 report)
+
+We conduct balance tests on pre-period characteristics to explore differences between counties that received CMHCs and those that did not.
+
+
+
+% these differences are why Bailey and Goodman-Bacon say that cross-sectional evidence would not work -- but why does it not invalidate the event study? Because the identifying assumption is parallel pre-trends.
+
+
+
+\begin{figure}
+\includegraphics[width=0.48\textwidth]{../build/output/figures/fig05_cmhc_es_ad.pdf}
+\includegraphics[width=0.48\textwidth]{../build/output/figures/fig06_cmhc_es_eld.pdf}
+\caption{Event study of CMHC opening on adult (ages 20-49) and elderly (ages 50+) mortality.}
+\end{figure}
+
+
+\input{../build/output/tables/table02_dd_robustness.tex}
+
+\input{../build/output/tables/table03_cause_decomp_cmhc.tex}
+
+\begin{figure}
+\includegraphics[width=\textwidth]{../build/output/figures/fig07_cmhc_chc_robust.pdf}
+\caption{CMHC event study for adults (ages 20-49): robustness controlling for concurrent Community Health Center rollout.}
+\end{figure}
+
+
+\input{../build/output/tables/table_cmhc_incarceration_ld.tex}
+
+%\begin{figure}
+%\includegraphics[width=\textwidth]{../build/output/figures/fig_cmhc_race.pdf}
+%\caption{Heterogeneous effects of CMHC opening by race/ethnicity.}
+%\end{figure}
+
+%\begin{figure}
+%\includegraphics[width=\textwidth]{../build/output/figures/fig_cmhc_heterogeneity.pdf}
+%\caption{Heterogeneous effects of CMHC opening across counties.}
+%\end{figure}
+
+\begin{figure}
+\includegraphics[width=0.48\textwidth]{../build/output/figures/fig08_ccbhc_es_mort.pdf}
+\includegraphics[width=0.48\textwidth]{../build/output/figures/fig_ccbhc_es_dod.pdf}
+\caption{Event study of CCBHC opening on adult (ages 25-44) mortality.}
+\end{figure}
+
+\begin{figure}
+\includegraphics[width=\textwidth]{../build/output/figures/fig09_ccbhc_robust.pdf}
+\caption{CCBHC event study: robustness specifications.}
+\end{figure}
+
+\input{../build/output/tables/table_ccbhc_heterogeneity.tex}
+
+
+%\begin{figure}
+%\includegraphics[width=\textwidth]{../build/output/figures/fig10_ccbhc_es_inc.pdf}
+%\caption{Event study of CCBHC opening on local jail incarceration rate.}
+%\end{figure}
+
+
+
+\subsection{Model}
+
+
+\subsection{Estimation}
+
+
+
+% ============================================================
+\appendix
+
+\section{Appendix: Additional Details}
+
+\subsection{Robustness and Alternative Specifications}
+
+\input{../replication/cmhc_poisson_table.tex}
+
+\input{../build/output/tables/table_appendix_poisson.tex}
+
+
+%\begin{figure}
+%\includegraphics[width=\textwidth]{../build/output/figures/fig_appendix_poisson.pdf}
+%\caption{Poisson regression robustness check for CMHC mortality effects.}
+%\end{figure}
+
+\begin{figure}
+\includegraphics[width=\textwidth]{../build/output/figures/fig_side_by_side.pdf}
+\caption{Side-by-side comparison of CMHC and CCBHC event study estimates.}
+\end{figure}
+
+\end{document}
