@@ -1,0 +1,79 @@
+
+_dta:
+  1.  uswbo19agesadj set up by Jean Roth , jroth@nber.org , 2 Jan 2018
+  2.  NBER URL: http://www.nber.org/data/seer_u.s._county_population_data.html
+  3.  Source Page: https://seer.cancer.gov/popdata/download.html
+  4.  Source File URL: seer.cancer.gov/popdata/yr1969_2016.19ages/us.1969_2016.19ages.adjusted.exe
+  5.  Source Text File: us.1969_2016.19ages.adjusted.txt
+
+  obs:    14,191,291                          
+ vars:            10                          2 Jan 2018 15:17
+ size:   283,825,820                          (_dta has notes)
+--------------------------------------------------------------------------------------------------------------------------------------------
+              storage   display    value
+variable name   type    format     label      variable label
+--------------------------------------------------------------------------------------------------------------------------------------------
+year            int     %8.0g                 Year
+st              str2    %9s                   State Postal Abbreviation
+stfips          str2    %9s                   State FIPS code
+county          str5    %9s                   County FIPS code
+registry        byte    %30.0g     registry   Registry
+race            byte    %51.0g     race       Race
+hispanic        byte    %29.0g     hispanic   Hispanic Origin
+sex             byte    %8.0g      sex        Sex
+age             byte    %11.0g     age        Age
+pop             long    %12.0g                Population
+--------------------------------------------------------------------------------------------------------------------------------------------
+Sorted by: year  county  age  race  sex
+registry:
+           1 San Francisco-Oakland SMSA 
+           2 Connecticut 
+          20 Detroit (Metropolitan) 
+          21 Hawaii 
+          22 Iowa 
+          23 New Mexico 
+          25 Seattle (Puget Sound) 
+          26 Utah 
+          27 Atlanta (Metropolitan) 
+          29 Alaska Natives 
+          31 San Jose-Monterey 
+          33 Arizona Indians 
+          35 Los Angeles 
+          37 Rural Georgia 
+          41 California excluding SF/SJM/LA 
+          42 Kentucky 
+          43 Louisiana 
+          44 New Jersey 
+          99 Registry for non-SEER area 
+race:
+           1 White 
+           2 Black 
+           3 Other (1969+)/American Indian/Alaska Native (1990+) 
+           4 Asian or Pacific Islander (1990+) 
+hispanic:
+           0 Non-Hispanic 
+           1 Hispanic 
+           9 Not applicable in 1969-2004 W 
+sex:
+           1 Male 
+           2 Female 
+age:
+           0 0 years 
+           1 1-4 years 
+           2 5-9 years 
+           3 10-14 years 
+           4 15-19 years 
+           5 20-24 years 
+           6 25-29 years 
+           7 30-34 years 
+           8 35-39 years 
+           9 40-44 years 
+          10 45-49 years 
+          11 50-54 years 
+          12 55-59 years 
+          13 60-64 years 
+          14 65-69 years 
+          15 70-74 years 
+          16 75-79 years 
+          17 80-84 years 
+          18 85+ years 

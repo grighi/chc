@@ -1,0 +1,4 @@
+
+## Pull Census county populations
+
+wget https://www2.census.gov/programs-surveys/popest/datasets/2010-2020/counties/asrh/CC-EST2020-ALLDATA.csv

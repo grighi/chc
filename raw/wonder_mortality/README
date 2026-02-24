@@ -1,0 +1,24 @@
+
+
+Pulls data data from WONDER and save it as a parquet file in the data/ directory. It opens a playwright session to 
+automate the data download by grabbing cookies, so it may take a few minutes to run.
+
+```bash
+# Run with
+python pull_wonder.py
+python pull_provisional_wonder.py
+
+pytest test_wonder_parquet.py
+```
+
+
+```bash
+# Example commands for inspecting the data files in Python:
+python -c "import pandas as pd; df = pd.read_parquet('data/county_sex_race_hispanic_origin_adults_all_races_all_causes.parquet');  print(df)"
+
+python -c "import pandas as pd; df = pd.read_parquet('data/county_sex_race_hispanic_origin_adults_all_races_all_causes.parquet'); print(df.columns)"
+
+python -c "import pandas as pd; df = pd.read_parquet('data/county_sex_race_hispanic_origin_adults_all_races_all_causes.parquet'); print(df[df['County Code']=='01001'])"
+```
+
+

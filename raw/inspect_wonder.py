@@ -1,0 +1,11 @@
+import pandas as pd
+df = pd.read_parquet('wonder_mortality/data/county_sex_race_hispanic_origin_adults_all_races_all_causes.parquet')
+print('Year range:', df['Year'].min(), '-', df['Year'].max())
+print('Sex Code values:', sorted(df['Sex Code'].dropna().unique()))
+print('\nRace/Code:')
+print(df[['Race','Race Code']].drop_duplicates().to_string())
+print('\nDeaths dtype:', df['Deaths'].dtype, '  NaN count:', df['Deaths'].isna().sum())
+dfp = pd.read_parquet('wonder_mortality/data/county_sex_race_hispanic_origin_adults_all_races_all_causes_provisional.parquet')
+print('\nProvisional Year range:', dfp['Year'].min(), '-', dfp['Year'].max())
+print('Provisional Race/Code:')
+print(dfp[['Single Race 6','Single Race 6 Code']].drop_duplicates().to_string())
