@@ -35,6 +35,45 @@ ICD reference (for downstream use)
 """
 
 
+
+issue = '''
+python -c "
+import pandas as pd
+
+# 1) Load main file, drop year==8, remap 0-7 -> 1970-1977 and 79-95 -> 1979-1995
+df = pd.read_parquet('raw/nber_mortality/nber_mortality_counts.parquet').copy()
+df['year'] = pd.to_numeric(df['year'], errors='coerce')
+
+df = df[df['year'] != 8].copy()
+
+m1 = {i: 1970 + i for i in range(0, 8)}          # 0..7 -> 1970..1977
+m2 = {i: 1900 + i for i in range(79, 96)}        # 79..95 -> 1979..1995
+df['year'] = df['year'].replace({**m1, **m2})
+
+# 2) Load supplement file, keep years 8-9, remap 8-9 -> 1968-1969
+df2 = pd.read_parquet('raw/nber_mortality/nber_mortality_counts_2.parquet').copy()
+df2['year'] = pd.to_numeric(df2['year'], errors='coerce')
+df2 = df2[df2['year'].isin([8, 9])].copy()
+df2['year'] = df2['year'].replace({8: 1968, 9: 1969})
+
+# 3) Combine + write
+out = pd.concat([df, df2], ignore_index=True)
+out.to_parquet('raw/nber_mortality/nber_mortality_counts_clean.parquet', index=False)
+"
+'''
+
+# throw error that stops execution and prints the issue text above
+import sys
+print(issue, file=sys.stderr)
+try:
+    raise OSError("Fix the year 1969 issue before running this script.")
+except OSError as e:
+    raise OSError("Fix the year 1969 issue before running this script.")
+    sys.exit(1)
+    
+
+
+
 import warnings
 warnings.warn(
     "Year 1969 appears to be incorrect. Check raw mortality file coding (datayear vs calendar year).",

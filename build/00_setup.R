@@ -74,9 +74,9 @@ for (d in c(DATA_DIR, FIG_DIR, TABLE_DIR, CSV_DIR, LOG_DIR)) {
 CMHC_MAX_COHORT   <- 1981L
 CMHC_PANEL_END    <- 1988L
 CMHC_EVENT_MIN    <- -6L
-CMHC_EVENT_MAX    <- 20L
+CMHC_EVENT_MAX    <- 13L
 CMHC_REF_PERIOD   <- -1L
-CMHC_PLOT_MAX     <- 14L
+CMHC_PLOT_MAX     <- 13L
 
 # ── CCBHC-era parameters ───────────────────────────────────────────────────
 CCBHC_EVENT_MIN   <- -5L

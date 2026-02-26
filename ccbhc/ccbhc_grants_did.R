@@ -19,7 +19,7 @@ library(ggplot2)
 ANALYSIS_TYPE <- "incarceration"
 
 weighting      <- TRUE
-matching       <- TRUE
+matching       <- FALSE
 balanced_panel <- FALSE
 
 # if (ANALYSIS_TYPE == "incarceration") {
@@ -86,8 +86,10 @@ if (ANALYSIS_TYPE == "incarceration") {
   # Average across quarters within county-year
   panel <- inc[, .(total_pop = mean(total_pop, na.rm = TRUE),
                   # outcome   = log(mean(jail_pop_per_capita, na.rm = TRUE))),
-                  outcome   = log(mean(total_jail_pop_rate, na.rm = TRUE))),
-                  # outcome   =     mean(total_jail_pop_rate, na.rm = TRUE)),    # pretrends!
+                  # outcome   = log(mean(total_jail_pop_rate, na.rm = TRUE))
+                  outcome    = log(mean(jail_pop_per_capita, na.rm = T) * mean(total_pop, na.rm = T))),
+                  # outcome   = mean(jail_pop_per_capita*100000, na.rm = TRUE)), # pretrends
+                  # outcome   =     mean(total_jail_pop_rate, na.rm = TRUE)),    # pretrends
                   # outcome   =  mean(jail_sentenced_rate, na.rm = TRUE)),
                by = .(fips, year)]
   panel <- panel[!is.na(outcome)]
@@ -262,6 +264,9 @@ if (ANALYSIS_TYPE == "incarceration") {
   stop("ANALYSIS_TYPE must be 'incarceration', 'mortality', or 'mortality_f'")
 }
 
+panel[, total_pop_avg := mean(total_pop, na.rm = TRUE), by = fips]
+panel[, Dpop := ntile(total_pop_avg, 5)][, total_pop_avg := NULL]
+
 # ========== 3. Merge and build event-study dataset ===========================
 
 
@@ -341,7 +346,7 @@ run_event_study <- function(dt, label) {
   
   mod <- feols(
     outcome ~ i(event_time_binned, ref = -1) + total_pop |
-      fips + year,
+      fips + year + stfips[year] + Dpop[year],
     data = dt[fips %in% county_sample],
     weights = if (weighting) ~total_pop else NULL,
     cluster = ~fips
@@ -402,7 +407,59 @@ run_event_study <- function(dt, label) {
     cat(sprintf("Joint post-treatment test (t>=0): F=%.2f, p=%.4f\n", wt$stat, wt$p))
   }
 
-  return(coef_df)
+  # ── Sun-Abraham (2021) heterogeneity-robust estimator ──────────────────
+  # Bin year to [min_et, max_et] relative to cohort so near-empty cells
+  # at the extremes don't blow up the SEs (same window as event_time_binned).
+  dt_sa <- copy(dt[fips %in% county_sample])
+  dt_sa[, `:=`(
+    cohort_sa = fifelse(is.na(treat_year), -999L, as.integer(treat_year)),
+    year_sa   = fifelse(
+      !is.na(treat_year),
+      as.integer(treat_year) + pmin(pmax(as.integer(year) - as.integer(treat_year),
+                                         min_et), max_et),
+      as.integer(year)
+    )
+  )]
+
+  mod_sa <- feols(
+    outcome ~ sunab(cohort_sa, year_sa, ref.c = -999, ref.p = -1) + total_pop |
+      fips + year + stfips[year] + Dpop[year],
+    data    = dt_sa,
+    weights = if (weighting) ~total_pop else NULL,
+    cluster = ~fips
+  )
+
+  sa_att_tbl <- summary(mod_sa, agg = "ATT")$coeftable
+  sa_att     <- sa_att_tbl[1, "Estimate"]
+  sa_att_se  <- sa_att_tbl[1, "Std. Error"]
+  twfe_post  <- mean(coef_df[event_time >= 0, coefficient])
+
+  cat(sprintf("\n  ── Sun-Abraham (2021) vs TWFE ──\n"))
+  cat(sprintf("    SA aggregate ATT:      %.4f (SE = %.4f)\n", sa_att, sa_att_se))
+  cat(sprintf("    SA 95%% CI:            [%.4f, %.4f]\n",
+              sa_att - 1.96 * sa_att_se, sa_att + 1.96 * sa_att_se))
+  cat(sprintf("    TWFE post-period mean: %.4f\n", twfe_post))
+  cat(sprintf("    Difference (SA-TWFE):  %.4f\n", sa_att - twfe_post))
+
+  cat("\n  SA cohort-specific ATTs:\n")
+  print(round(summary(mod_sa, agg = "cohort")$coeftable, 4))
+
+  sa_period_ct <- summary(mod_sa, agg = "period")$coeftable
+  sa_coef_df <- data.table(
+    event_time  = as.integer(gsub(".*::(-?[0-9]+)", "\\1", rownames(sa_period_ct))),
+    coefficient = sa_period_ct[, "Estimate"],
+    se          = sa_period_ct[, "Std. Error"]
+  )
+  sa_coef_df <- sa_coef_df[event_time >= min_et & event_time <= max_et]
+  sa_coef_df[, `:=`(ci_lower = coefficient - 1.96 * se,
+                    ci_upper = coefficient + 1.96 * se)]
+  sa_coef_df <- rbindlist(list(
+    sa_coef_df,
+    data.table(event_time = -1L, coefficient = 0, se = 0, ci_lower = 0, ci_upper = 0)
+  ))
+  setorder(sa_coef_df, event_time)
+
+  return(list(twfe = coef_df, sa = sa_coef_df, sa_att = sa_att, sa_att_se = sa_att_se))
 }
 
 plot_event_study <- function(coef_df, title, filename) {
@@ -423,6 +480,40 @@ plot_event_study <- function(coef_df, title, filename) {
     theme(plot.title = element_text(face = "bold"),
           panel.grid.minor = element_blank())
 
+  print(p)
+  ggsave(filename, p, width = 10, height = 6, dpi = 300)
+  cat(sprintf("Plot saved to %s\n", filename))
+}
+
+plot_event_study_compare <- function(res, title, filename) {
+  twfe_df <- res$twfe
+  sa_df   <- res$sa
+  p <- ggplot(twfe_df, aes(x = event_time, y = coefficient)) +
+    geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+    geom_vline(xintercept = -0.5, linetype = "dashed", color = "gray50") +
+    geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), fill = "steelblue", alpha = 0.15) +
+    geom_line(aes(color = "TWFE"), linewidth = 0.8) +
+    geom_point(aes(color = "TWFE"), size = 2) +
+    geom_ribbon(data = sa_df,
+                aes(ymin = ci_lower, ymax = ci_upper), fill = "tomato", alpha = 0.15) +
+    geom_line(data  = sa_df, aes(color = "Sun-Abraham (2021)"), linewidth = 0.8) +
+    geom_point(data = sa_df, aes(color = "Sun-Abraham (2021)"), size = 2) +
+    scale_color_manual(
+      values = c("TWFE" = "steelblue", "Sun-Abraham (2021)" = "tomato"),
+      name   = "Estimator"
+    ) +
+    labs(
+      title    = title,
+      subtitle = sprintf("SA ATT = %.4f (SE = %.4f). TWFE post mean = %.4f.",
+                         res$sa_att, res$sa_att_se,
+                         mean(twfe_df[twfe_df$event_time >= 0, coefficient])),
+      x = "Years Relative to First CCBHC Grant",
+      y = outcome_label
+    ) +
+    theme_minimal(base_size = 12) +
+    theme(plot.title = element_text(face = "bold"),
+          panel.grid.minor = element_blank(),
+          legend.position = "bottom")
   ggsave(filename, p, width = 10, height = 6, dpi = 300)
   cat(sprintf("Plot saved to %s\n", filename))
 }
@@ -442,12 +533,18 @@ coef_baseline <- run_event_study(
   sprintf("CCBHC Grants -> %s (Baseline, Matched)", ANALYSIS_TYPE)
 )
 
-fwrite(coef_baseline, sprintf("ccbhc_%s_baseline_coefs.csv", ANALYSIS_TYPE))
+fwrite(coef_baseline$twfe, sprintf("ccbhc_%s_baseline_coefs.csv", ANALYSIS_TYPE))
 plot_event_study(
-  coef_baseline,
+  coef_baseline$twfe,
   sprintf("Effect of CCBHC Grant on %s",
           ifelse(ANALYSIS_TYPE == "mortality", "Death Rate (25-44)", "Jail Incarceration Rate")),
   sprintf("ccbhc_%s_event_study.png", ANALYSIS_TYPE)
+)
+plot_event_study_compare(
+  coef_baseline,
+  sprintf("TWFE vs Sun-Abraham: CCBHC Effect on %s",
+          ifelse(ANALYSIS_TYPE == "mortality", "Death Rate (25-44)", "Jail Incarceration Rate")),
+  sprintf("ccbhc_%s_event_study_sa_compare.png", ANALYSIS_TYPE)
 )
 
 # Heterogeneity: small vs large counties (unweighted)
@@ -461,8 +558,8 @@ coef_large <- run_event_study(
   sprintf("CCBHC Grants -> %s (Large Counties >=30k, Unweighted)", ANALYSIS_TYPE)
 )
 
-fwrite(coef_small, sprintf("ccbhc_%s_heterogeneity_small_coefs.csv", ANALYSIS_TYPE))
-fwrite(coef_large, sprintf("ccbhc_%s_heterogeneity_large_coefs.csv", ANALYSIS_TYPE))
+fwrite(coef_small$twfe, sprintf("ccbhc_%s_heterogeneity_small_coefs.csv", ANALYSIS_TYPE))
+fwrite(coef_large$twfe, sprintf("ccbhc_%s_heterogeneity_large_coefs.csv", ANALYSIS_TYPE))
 
 # ========== 8. Robustness: Drop Medicaid waiver states =======================
 
@@ -478,9 +575,9 @@ coef_no_waiver <- run_event_study(
   sprintf("Robustness: Drop Medicaid Waiver States (%s)", ANALYSIS_TYPE)
 )
 
-fwrite(coef_no_waiver, sprintf("ccbhc_%s_rob_no_waiver_coefs.csv", ANALYSIS_TYPE))
+fwrite(coef_no_waiver$twfe, sprintf("ccbhc_%s_rob_no_waiver_coefs.csv", ANALYSIS_TYPE))
 plot_event_study(
-  coef_no_waiver,
+  coef_no_waiver$twfe,
   sprintf("CCBHC Effect excl. Medicaid Waiver States (%s)",
           ifelse(ANALYSIS_TYPE == "mortality", "Death Rate", "Jail Rate")),
   sprintf("ccbhc_%s_rob_no_waiver.png", ANALYSIS_TYPE)
@@ -500,9 +597,9 @@ coef_planning <- run_event_study(
   sprintf("Robustness: Planning Grant States Only (%s)", ANALYSIS_TYPE)
 )
 
-fwrite(coef_planning, sprintf("ccbhc_%s_rob_planning_states_coefs.csv", ANALYSIS_TYPE))
+fwrite(coef_planning$twfe, sprintf("ccbhc_%s_rob_planning_states_coefs.csv", ANALYSIS_TYPE))
 plot_event_study(
-  coef_planning,
+  coef_planning$twfe,
   sprintf("CCBHC Effect — Planning Grant States Only (%s)",
           ifelse(ANALYSIS_TYPE == "mortality", "Death Rate", "Jail Rate")),
   sprintf("ccbhc_%s_rob_planning_states.png", ANALYSIS_TYPE)
@@ -526,7 +623,7 @@ cat("==========================================================\n")
 
 
   cat("\nBaseline event study coefficients:\n")
-  print(coef_baseline[, .(event_time,
+  print(coef_baseline$twfe[, .(event_time,
                     coef   = sprintf("%.3f", coefficient),
                     se     = sprintf("%.3f", se),
                     ci_95  = sprintf("[%.3f, %.3f]", ci_lower, ci_upper),

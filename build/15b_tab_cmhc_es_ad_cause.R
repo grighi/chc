@@ -6,6 +6,9 @@
 # ============================================================================
 log_section("15b: CMHC Event Study — Cause-of-Death Decomposition")
 
+warning("This decomposition should show which conditions deaths are driven by, but 
+  we don't see any consistent patterns yet.")
+
 # ── 1. Load NBER mortality micro-data ────────────────────────────────────────
 cat("  Loading NBER mortality data...\n")
 nber <- arrow::read_parquet(file.path(NBER_DIR, "nber_mortality_counts.parquet")) %>%
@@ -37,28 +40,69 @@ nber[nchar(countyrs) == 4,
 nber <- nber[nchar(countyrs) == 5 & !grepl("[^0-9]", countyrs)]
 
 # ── 4. UCOD classification ──────────────────────────────────────────────────
-# ICD-7 (1959-67), ICD-8 (1968-78), ICD-9 (1979-88) — all use similar
-# numeric ranges for external causes and cardiovascular disease.
-# E-codes stored WITHOUT the "E" prefix: 800-999 range.
-# Cardiovascular: 390-459
+# E-codes stored without "E" prefix, so numeric extraction covers all ICD revisions.
+# Suicide:  950-959 (ICD-7/8) / E950-E959 (ICD-9, stored as 950-959)
+# Homicide: 960-969 / E960-E969
+# Alcohol:  303 (alcoholism)
+
+# ── 2. ICD cause-of-death codes ───────────────────────────────────────
+# Suicide: ICD-8A 950-959, ICD-9 E950-E959
+sui_icd78 <- c("950-", paste0("950", 0:9),
+               "951", "951-", paste0("951", 0:8),
+               "952-", paste0("952", 0:9),
+               "953", "953-", paste0("953", 0:9),
+               "954", "954-",
+               "955", "955-", paste0("955", 0:9),
+               "956", "956-",
+               "957", "957-", paste0("957", 0:9),
+               "958", "958-", paste0("958", 0:9),
+               "959", "959-")
+sui_icd9  <- paste0("E95", 0:9)
+SUICIDE_CODES <- c(sui_icd78, sui_icd9)
+
+# Homicide: ICD-8A 960-969, ICD-9 E960-E969
+hom_icd78 <- c("960", "960-", paste0("960", 0:9),
+               "961", "961-", paste0("961", 0:9),
+               "962", "962-", paste0("962", 0:9),
+               "963", "963-", "964", "964-",
+               "965", "965-", paste0("965", 0:9),
+               "966", "966-",
+               "967", paste0("967", 0:9),
+               "968", paste0("968", 0:9),
+               "969", "969-", paste0("969", 0:9))
+hom_icd9  <- paste0("E96", 0:9)
+HOMICIDE_CODES <- c(hom_icd78, hom_icd9)
+
+# Alcohol-related: A&L main specification uses ONLY ICD-8/9 code 303 (alcoholism)
+# Alt alcohol (robustness) adds 571.0-571.3, 155.0
+alc_icd78 <- c("303", "303-", paste0("303", 0:9))
+alc_icd9  <- c("303",  paste0("303", 0:9))
+ALCOHOL_CODES <- unique(c(alc_icd78, alc_icd9))
+
+
+SUICIDE_CODES  <- 950:959
+HOMICIDE_CODES <- 960:969
+ALCOHOL_CODES  <- 303
 
 classify_ucod <- function(ucod) {
-  code3 <- as.integer(substr(ucod, 1, 3))
-  fifelse(
-    code3 >= 800 & code3 <= 999, "external",
-    fifelse(code3 >= 390 & code3 <= 459, "cardiovascular", "other")
-  )
+  code3 <- as.numeric(substr(ucod, 1, 3))
+  fifelse(code3 %in% as.numeric(SUICIDE_CODES), "suicide",
+    fifelse(code3 %in% as.numeric(HOMICIDE_CODES), "homicide",
+      fifelse(code3 %in% as.numeric(ALCOHOL_CODES), "alcohol", "other")))
 }
 
 nber[, cause_type := classify_ucod(ucod)]
 
 cat("  UCOD classification:\n")
-cat(sprintf("    External (800-999):       %s deaths\n",
-            format(sum(nber$deaths[nber$cause_type == "external"]), big.mark = ",")))
-cat(sprintf("    Cardiovascular (390-459): %s deaths\n",
-            format(sum(nber$deaths[nber$cause_type == "cardiovascular"]), big.mark = ",")))
-cat(sprintf("    Other:                    %s deaths\n",
-            format(sum(nber$deaths[nber$cause_type == "other"]), big.mark = ",")))
+cat(sprintf("    Suicide:  %s deaths\n",
+            format(sum(nber$deaths[nber$cause_type == "suicide"]),  big.mark = ",")))
+cat(sprintf("    Homicide: %s deaths\n",
+            format(sum(nber$deaths[nber$cause_type == "homicide"]), big.mark = ",")))
+cat(sprintf("    Alcohol:  %s deaths\n",
+            format(sum(nber$deaths[nber$cause_type == "alcohol"]),  big.mark = ",")))
+cat(sprintf("    Other:    %s deaths\n",
+            format(sum(nber$deaths[nber$cause_type == "other"]),    big.mark = ",")))
+
 
 # ── 5. Race categories ──────────────────────────────────────────────────────
 nber[, race_num := as.integer(race)]
@@ -67,8 +111,10 @@ cat(sprintf("  White (race=1): %s rows, Nonwhite (race=2): %s rows\n",
             format(nrow(nber[race_num == 2]), big.mark = ",")))
 
 # ── 6. Aggregate by (year, countyrs, race, cause_type) ──────────────────────
+CAUSE_TYPES <- c("suicide", "homicide", "alcohol")
+
 agg_fn <- function(dt, race_val, race_label) {
-  dt[race_num == race_val & cause_type %in% c("external", "cardiovascular"),
+  dt[race_num == race_val & cause_type %in% CAUSE_TYPES,
      .(deaths = sum(deaths, na.rm = TRUE)),
      by = .(year, countyrs, cause_type)
   ][, race_cat := race_label]
@@ -78,24 +124,24 @@ agg_white    <- agg_fn(nber, 1L, "white")
 agg_nonwhite <- agg_fn(nber, 2L, "nonwhite")
 
 # "all" race: aggregate across race=1 and race=2 for cause-specific
-agg_all_race <- nber[race_num %in% c(1L, 2L) & cause_type %in% c("external", "cardiovascular"),
+agg_all_race <- nber[race_num %in% c(1L, 2L) & cause_type %in% CAUSE_TYPES,
   .(deaths = sum(deaths, na.rm = TRUE)),
   by = .(year, countyrs, cause_type)
 ][, race_cat := "all"]
 
-# "all" cause: aggregate across external + cardiovascular (race-specific)
-agg_all_cause_w <- nber[race_num == 1L & cause_type %in% c("external", "cardiovascular"),
+# "all" cause: aggregate across suicide + homicide + alcohol (race-specific)
+agg_all_cause_w <- nber[race_num == 1L & cause_type %in% CAUSE_TYPES,
   .(deaths = sum(deaths, na.rm = TRUE)),
   by = .(year, countyrs)
 ][, `:=`(cause_type = "all", race_cat = "white")]
 
-agg_all_cause_nw <- nber[race_num == 2L & cause_type %in% c("external", "cardiovascular"),
+agg_all_cause_nw <- nber[race_num == 2L & cause_type %in% CAUSE_TYPES,
   .(deaths = sum(deaths, na.rm = TRUE)),
   by = .(year, countyrs)
 ][, `:=`(cause_type = "all", race_cat = "nonwhite")]
 
-# Baseline: all race, all cause (external + cardiovascular combined)
-agg_baseline <- nber[race_num %in% c(1L, 2L) & cause_type %in% c("external", "cardiovascular"),
+# Baseline: all race, all cause (suicide + homicide + alcohol combined)
+agg_baseline <- nber[race_num %in% c(1L, 2L) & cause_type %in% CAUSE_TYPES,
   .(deaths = sum(deaths, na.rm = TRUE)),
   by = .(year, countyrs)
 ][, `:=`(cause_type = "all", race_cat = "all")]
@@ -133,7 +179,7 @@ combos <- CJ(
   fips = unique(panel_sub$fips),
   year = unique(panel_sub$year),
   race_cat = c("white", "nonwhite", "all"),
-  cause_type = c("external", "cardiovascular", "all")
+  cause_type = c("suicide", "homicide", "alcohol", "all")
 )
 
 # Merge panel vars onto combos
@@ -222,15 +268,15 @@ run_es <- function(dt, race, cause) {
 results <- list()
 
 # Baseline: all races, all causes
-res <- run_es(combos, "all", "all")[[1]]
-if (!is.null(res)) results[["all_all"]] <- res
+res <- run_es(combos, "all", "all")
+if (!is.null(res)) results[["all_all"]] <- res[[1]]
 
 # Decompositions
-for (rc in c("white", "nonwhite")) {
-  for (ct in c("external", "cardiovascular")) {
+for (rc in c("all")) {
+  for (ct in c("suicide", "homicide", "alcohol")) {
     res <- run_es(combos, rc, ct)
     if (!is.null(res)) {
-      results[[paste(rc, ct, sep = "_")]] <- res
+      results[[paste(rc, ct, sep = "_")]] <- res[[1]]
     }
   }
 }
@@ -267,7 +313,7 @@ if (length(results) == 0) {
     facet_wrap(~panel_label, scales = "free_y", ncol = 2) +
     labs(
       title = "Effect of CMHC Opening on Cause-Specific Mortality (Ages 25-44)",
-      subtitle = "Event study by race and cause of death. NBER Vital Statistics, 1960-1988.",
+      subtitle = "Event study by race and cause (suicide/homicide/alcohol). NBER Vital Statistics, 1960-1988.",
       x = "Years Relative to CMHC Opening",
       y = "Change in Deaths per 100,000"
     ) +

@@ -15,7 +15,7 @@ baseline_use_controls <- TRUE
 # STEP 1: Load CMHC data from Excel files
 # ==========================================
 
-cmhc_openings <- readr::read_csv('../cmhc_data/cmhc_openings.csv', show_col_types = FALSE)
+cmhc_openings <- readr::read_csv('cmhc_data/cmhc_openings.csv', show_col_types = FALSE)
 
 cat("Found", nrow(cmhc_openings), "counties with CMHC openings\n")
 cat("Year distribution:\n")
@@ -31,7 +31,7 @@ cat("Loading base data...\n")
 # read_dta("aer_data/aer_data.dta") |> unique() |> fst::write_fst('aer_data/aer_data.fst') 
 # vars <- sapply(haven::read_dta("aer_data/aer_data.dta", n_max = 0), attr, "label") |> unlist
 # fwrite(data.frame(name = names(vars), value = vars), 'replication/vars.csv')
-data <- fst::read_fst('../aer_data/aer_data.fst') %>% as_tibble()
+data <- fst::read_fst('aer_data/aer_data.fst') %>% as_tibble()
 
 
 # Merge CMHC openings
