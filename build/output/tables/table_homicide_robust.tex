@@ -1,0 +1,84 @@
+\begin{table}[htbp]
+\centering
+\caption{Homicide Pre-Trend Robustness (NBER-Derived AMRs, Ages 20--49)}
+\label{tab:homicide_robust}
+\small
+
+% Panel A: Finer bins
+\begin{tabular}{lccccc}
+\toprule
+\multicolumn{6}{l}{\textit{Panel A: Finer Pre-Period Bins}} \\
+\midrule
+ & $[-6,-4]$ & $[-3,-1]$ & $[0,3]$ & $[4,7]$ & $[8,13]$ \\
+\midrule
+All Causes & -0.006 & 0.191 & -0.940 & -3.282 & -4.944* \\
+ & (2.047) & (1.200) & (1.910) & (1.996) & (2.825) \\
+Homicide & -1.719*** & -0.686* & -0.684 & -0.927 & -1.505** \\
+ & (0.667) & (0.415) & (0.575) & (0.568) & (0.732) \\
+All-Cause ex-Homicide & 1.742 & 0.897 & -0.237 & -2.330 & -3.362 \\
+ & (1.834) & (1.109) & (1.843) & (1.934) & (2.774) \\
+\bottomrule
+\end{tabular}
+
+\vspace{1em}
+
+% Panel B: Ex-Homicide
+\begin{tabular}{lcccc}
+\toprule
+\multicolumn{5}{l}{\textit{Panel B: All-Cause vs.\ All-Cause Excluding Homicide}} \\
+\midrule
+ & $[-6,-1]$ & $[0,3]$ & $[4,7]$ & $[8,13]$ \\
+\midrule
+All Causes & 0.093 & -0.940 & -3.282 & -4.944* \\
+ & (1.678) & (1.910) & (1.996) & (2.825) \\
+Homicide & -1.202** & -0.684 & -0.927 & -1.505** \\
+ & (0.555) & (0.575) & (0.568) & (0.732) \\
+All-Cause ex-Homicide & 1.320 & -0.237 & -2.330 & -3.362 \\
+ & (1.515) & (1.843) & (1.934) & (2.774) \\
+\bottomrule
+\end{tabular}
+
+\vspace{1em}
+
+% Panel C: Drop high-homicide
+\begin{tabular}{lcccc}
+\toprule
+\multicolumn{5}{l}{\textit{Panel C: Full Sample vs.\ Low-Homicide Counties}} \\
+\midrule
+ & $[-6,-1]$ & $[0,3]$ & $[4,7]$ & $[8,13]$ \\
+\midrule
+All-Cause (full) & 0.093 & -0.940 & -3.282 & -4.944* \\
+ & (1.678) & (1.910) & (1.996) & (2.825) \\
+All-Cause (low-hom) & 1.484 & 0.733 & 0.421 & 0.377 \\
+ & (1.497) & (1.674) & (1.689) & (2.291) \\
+Homicide (full) & -1.202** & -0.684 & -0.927 & -1.505** \\
+ & (0.555) & (0.575) & (0.568) & (0.732) \\
+Homicide (low-hom) & -0.581* & -0.504 & -0.343 & -0.684* \\
+ & (0.327) & (0.349) & (0.352) & (0.358) \\
+\bottomrule
+\end{tabular}
+
+\vspace{1em}
+
+% Panel D: County trends
+\begin{tabular}{lcccc}
+\toprule
+\multicolumn{5}{l}{\textit{Panel D: Baseline vs.\ County-Specific Linear Trends}} \\
+\midrule
+ & $[-6,-1]$ & $[0,3]$ & $[4,7]$ & $[8,13]$ \\
+\midrule
+All-Cause (baseline) & 0.093 & -0.940 & -3.282 & -4.944* \\
+ & (1.678) & (1.910) & (1.996) & (2.825) \\
+All-Cause (cty trend) & 0.499 & -0.943 & -4.044 & -7.276 \\
+ & (1.833) & (1.823) & (2.975) & (5.019) \\
+Homicide (baseline) & -1.202** & -0.684 & -0.927 & -1.505** \\
+ & (0.555) & (0.575) & (0.568) & (0.732) \\
+Homicide (cty trend) & -0.810 & -1.118* & -2.091** & -3.900*** \\
+ & (0.687) & (0.652) & (0.884) & (1.344) \\
+\bottomrule
+\end{tabular}
+
+\begin{minipage}{\textwidth}
+\vspace{0.5em}\footnotesize \textit{Notes:} Panel~A uses finer pre-treatment bins $[-6,-4]$ and $[-3,-1]$ to diagnose pre-trend timing. Panel~B compares all-cause AMR with and without homicide deaths. Panel~C drops counties in the top quartile of mean homicide AMR. Panel~D adds county-specific linear trends. All specifications include county, year, urban$\times$year, and state$\times$year FE, controls for physician supply and hospital beds. Population-weighted (1960 base). Clustered at county level. * $p<0.10$, ** $p<0.05$, *** $p<0.01$.
+\end{minipage}
+\end{table}

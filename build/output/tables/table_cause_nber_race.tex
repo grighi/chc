@@ -1,0 +1,35 @@
+\begin{table}[htbp]
+\centering
+\caption{Race-Stratified External Causes: NBER-Derived AMRs (Ages 20--49)}
+\label{tab:cause_nber_race}
+\small
+\begin{tabular}{lcccc}
+\toprule
+ & $[-6,-1]$ & $[0,3]$ & $[4,7]$ & $[8,13]$ \\
+\midrule
+White External & 0.054 & 0.143 & -1.287 & -1.941 \\
+ & (0.808) & (0.889) & (1.077) & (1.570) \\
+Nonwhite External & -0.803 & -1.067 & -2.018** & -3.657** \\
+ & (0.652) & (0.749) & (1.012) & (1.447) \\
+White Suicide & -0.100 & 0.148 & -0.137 & -0.305 \\
+ & (0.402) & (0.408) & (0.480) & (0.709) \\
+Nonwhite Suicide & -0.106 & -0.017 & -0.225 & -0.380* \\
+ & (0.102) & (0.122) & (0.153) & (0.212) \\
+White Homicide & 0.009 & -0.170 & -0.676** & -1.499*** \\
+ & (0.292) & (0.290) & (0.332) & (0.481) \\
+Nonwhite Homicide & -0.819 & -0.948* & -1.415* & -2.401** \\
+ & (0.536) & (0.571) & (0.752) & (1.090) \\
+White Poisoning & 0.047 & -0.125 & -0.032 & -0.203 \\
+ & (0.138) & (0.150) & (0.209) & (0.315) \\
+Nonwhite Poisoning & -0.108 & -0.134 & -0.187 & -0.228 \\
+ & (0.109) & (0.115) & (0.141) & (0.172) \\
+White Alcohol & 0.174 & -0.325 & -0.616 & -0.886* \\
+ & (0.308) & (0.337) & (0.384) & (0.536) \\
+Nonwhite Alcohol & -0.061 & -0.159 & -0.364 & -0.897 \\
+ & (0.218) & (0.311) & (0.443) & (0.634) \\
+\bottomrule
+\end{tabular}
+\begin{minipage}{\textwidth}
+\vspace{0.5em}\footnotesize \textit{Notes:} Each cell reports the mean event-study coefficient across event times in the indicated bin. Standard errors (in parentheses) computed as $\sqrt{\text{mean}(se_i^2)}$ within each bin. All specifications include county, year, urban$\times$year, and state$\times$year fixed effects, county-specific linear trends, and controls for physician supply and hospital beds. Population-weighted (1960 base). Clustered at county level. * $p<0.10$, ** $p<0.05$, *** $p<0.01$.
+\end{minipage}
+\end{table}

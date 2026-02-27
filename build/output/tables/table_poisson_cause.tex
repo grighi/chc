@@ -1,0 +1,54 @@
+\begin{table}[htbp]
+\centering
+\caption{TWFE vs Poisson PPML: Cause Decomposition (Ages 20--49)}
+\label{tab:poisson_cause}
+\footnotesize
+\begin{tabular}{lcccc}
+\toprule
+ & $[-6,-1]$ & $[0,3]$ & $[4,7]$ & $[8,13]$ \\
+\midrule
+All Causes (TWFE) & 0.499 & -0.943 & -4.044 & -7.276 \\
+ & (1.833) & (1.823) & (2.975) & (5.019) \\
+All Causes (Poisson) & 0.0022 & 0.0028 & -0.0060 & -0.0083 \\
+ & (0.0055) & (0.0063) & (0.0073) & (0.0106) \\
+\addlinespace
+Cardiovascular (TWFE) & 0.069 & -1.034 & -0.852 & -1.620 \\
+ & (0.707) & (0.666) & (0.855) & (1.310) \\
+Cardiovascular (Poisson) & -0.0021 & -0.0159 & -0.0025 & -0.0132 \\
+ & (0.0109) & (0.0127) & (0.0144) & (0.0183) \\
+\addlinespace
+Cerebrovascular (TWFE) & 0.097 & 0.171 & 0.293 & 0.883 \\
+ & (0.294) & (0.295) & (0.374) & (0.558) \\
+Cerebrovascular (Poisson) & 0.0146 & 0.0054 & 0.0015 & 0.0220 \\
+ & (0.0214) & (0.0269) & (0.0284) & (0.0301) \\
+\addlinespace
+Cancer (TWFE) & 0.120 & 0.250 & 0.877 & 1.280 \\
+ & (0.522) & (0.560) & (0.681) & (1.016) \\
+Cancer (Poisson) & 0.0112 & 0.0023 & 0.0019 & -0.0093 \\
+ & (0.0105) & (0.0123) & (0.0129) & (0.0139) \\
+\addlinespace
+Infectious (TWFE) & 0.890** & -0.060 & -0.937 & -1.668 \\
+ & (0.396) & (0.373) & (0.849) & (1.652) \\
+Infectious (Poisson) & 0.0615** & 0.0413 & 0.0409 & 0.0958* \\
+ & (0.0281) & (0.0360) & (0.0452) & (0.0518) \\
+\addlinespace
+Diabetes (TWFE) & 0.070 & 0.194 & 0.179 & 0.319 \\
+ & (0.157) & (0.163) & (0.176) & (0.243) \\
+Diabetes (Poisson) & 0.0369 & 0.0631 & 0.0529 & 0.0787 \\
+ & (0.0375) & (0.0472) & (0.0466) & (0.0531) \\
+\addlinespace
+Accidents (TWFE) & 0.071 & 0.024 & -0.704 & -0.663 \\
+ & (0.686) & (0.710) & (0.926) & (1.405) \\
+Accidents (Poisson) & 0.0039 & -0.0008 & -0.0215 & -0.0220 \\
+ & (0.0124) & (0.0143) & (0.0150) & (0.0175) \\
+\addlinespace
+Other (TWFE) & -0.863 & -0.479 & -2.969* & -5.909** \\
+ & (1.235) & (1.232) & (1.728) & (2.471) \\
+Other (Poisson) & -0.0094 & 0.0120 & -0.0080 & -0.0084 \\
+ & (0.0106) & (0.0124) & (0.0131) & (0.0187) \\
+\bottomrule
+\end{tabular}
+\begin{minipage}{\textwidth}
+\vspace{0.5em}\footnotesize \textit{Notes:} TWFE rows report OLS coefficients on age-adjusted mortality rates (deaths per 100,000). Poisson rows report semi-elasticities from Poisson PPML with log-population offset (approximate \% change $\approx 100 \times$ coefficient). Both use event-study bins relative to CMHC opening. All specifications include county, year, urban$\times$year, state$\times$year, and county-specific trend FE; controls for physician supply and hospital beds. Population-weighted. Clustered at county level. * $p<0.10$, ** $p<0.05$, *** $p<0.01$.
+\end{minipage}
+\end{table}
