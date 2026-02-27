@@ -1,4 +1,4 @@
-\documentclass[11pt]{article}
+\documentclass[12pt]{article}
 
 % ---------- Packages ----------
 \usepackage[margin=1.1in]{geometry}
@@ -19,6 +19,8 @@
 \doublespacing
 
 
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection}{1em}{}
 
 % ---------- Title ----------
 \title{\vspace{-1cm}
@@ -97,22 +99,22 @@ The only quantitative evidence of CMHCs' mortality effects, Avery and LaVoice (2
 
 This paper uses the staggered rollout of CMHCs and CCBHCs across U.S. counties to revisit the health impacts of the construction of community mental health facilities during the two significant periods of expansion in the post-WWII period, CMHCs in the 1960s, and CCBHCs in the 2010s. In studying both eras, this paper assesses the impact of a similar model of care across different institutional contexts, funding structures, and disease environments.
 
-I find that the established of a CMHC in a county reduced age-adjusted mortality among 20–49 year olds by approximately 10–12 deaths per 100,000 within a decade, which is a substantial effect given baseline mortality in this age group. Critically, there is no effect among those aged 50 and older, consistent with CMHCs operating through mental health channels rather than cardiovascular and chronic disease channels more relevant to older adults. The effect is robust to controlling for the concurrent rollout of Community Health Centers, whose mortality effects operated through primary care for older Americans (Bailey and Goodman-Bacon 2015).
+I find that the establishment of a CMHC in a county reduced age-adjusted mortality among 20-49 year olds by approximately 10-12 deaths per 100,000 within a decade, which is a substantial effect given baseline mortality in this age group. The effect is robust to controlling for the concurrent rollout of Community Health Centers, whose mortality effects operated through primary care for older Americans (Bailey and Goodman-Bacon 2015). There is no effect among those aged 50 and older, consistent with CMHCs operating through mental health channels rather than cardiovascular and chronic disease channels more relevant to older adults. In a cause of death decomposition, I find that the effects are driven by reductions in external causes of death, especially homicides.
 
 Turning to the contemporary era, I find that receipt of a federal grant to establish a CCBHC in a county reduced mortality among 25-44 year old by approximately 5-8 deaths per 100,000 within a few years, the most recent years for which we have data. This is driven by differential mortality in the COVID-19 era, indicating that CCBHCs had a protective effect against suicide and overdose mortality. \emph{\textbf{(Still need to properly decompose deaths across types: I decompose this effect across types of mortality to show that it is driven by slower growth in suicide and overdose, rather than COVID-19 mortality, in treated counties.)}} 
 
-I find evidence that CCBHCs reduce local jail population rates by about 10\%. A recent literature has begun to highlight the value of Medicaid, which operates on the demand margin of mental health services, reduces incarceration rates. My evidence suggests that there is also room to improve the supply of mental health services for reducing local incarceration. We are not able to observe the same pattern in the earlier CMHC era, since granular incarceration data do not exist, but long-difference regressions provide similar results.
+I find evidence that CCBHCs reduce local jail population rates by about 10\%. A recent literature has begun to highlight the value of Medicaid, which operates on the demand margin of mental health services, reduces incarceration rates. My evidence suggests that there is also room to improve the supply of mental health services for reducing local incarceration. While I am not able to observe incarceration trends in the earlier CMHC era, long-difference regressions find results consistent with this notion.
 
 This paper makes three contributions. First, it provides estimates of two major community mental health programs' effects on all-cause mortality, finding effects that are larger than those in prior work focused on narrower cause-specific outcomes. Second, it is the first evaluation of the CCBHC program, documenting that the rebuilt model produces similar health gains and suggestive evidence that it reduces incarceration. Third, by studying both eras, the paper documents that federal investment in community mental health reduces mortality.
 
 % homelessness, incarceration, and deaths of despair
 
 % ============================================================
-\section{Background and History of Community Mental Health Treatment in the United States}
+\section{Background}
 
-Two eras dominate federal involvement in Community Mental Health Treatment in the US. The first focused on Community Mental Health Centers, starting in 1963 and slowing substantially after 1981. CMHCs built the first infrastructure for community mental health. The second focused on Certified Community Behavioral Health Centers and started in 2014. In this second era, CCBHCs have established new standards and a more sustainable payment model.
+Two eras dominate federal involvement in community mental health treatment in the US. The first focused on Community Mental Health Centers, starting in 1963 and slowing substantially after 1981. CMHCs built the first infrastructure for community mental health. The second focused on Certified Community Behavioral Health Centers and started in 2014. In this second era, CCBHCs have established new standards and a more sustainable payment model.
 
-\subsection{The First Era: Community Mental Health Centers (1963-1981)}
+\subsection{First Era: Community Mental Health Centers (1963-1981)}
 
 \begin{figure}
 \includegraphics[width=\textwidth]{../build/output/figures/fig01_federal_budgets.pdf}
@@ -132,7 +134,7 @@ Although CMHCs were intended to reduce the institutionalization of people with S
 
 Funding for CMHCs was dramatically reduced in 1981 through the Omnibus Budget Reconciliation Act. This converted CMHC funding to the Mental Health Services Block Grant and cut its funding by 25\%, reducing the program's growth and federal standardization of services (citex Culhane). By this time, 761 of the planned 2,000 centers had been built. A vast qualitative literature emphasizes that CMHCs were unable to serve people with SMI, and that they were not designed or equipped to treat this population. Many continued to live in the community with reduced services, and large fractions of the population served by centers likely moved into homelessness and incarceration. Raphael and Stoll (citex Raph) find some evidence that it contributed to the subsequent rise in incarcerated populations. Bronson and Berzofsky (citex Bronson) find that in 2012, 26\% of people in jails met the threshold for serious psychological distress.
 
-Several important differences between CHCs and CMHCs contributed to differences in the sustainability of their programs. CHCs had a simple goal–the provision of primary care–with a dominant funding source in Medicaid, while CMHCs had both goals of reducing institutionalization and of increasing outpatient mental health services. The CHC funding model aligned more clearly with Medicaid, while CMHC saw many patients that were uninsured or had to provide services that were not billable under Medicaid. While CMHCs experienced cuts in funding, CHCs evolved into Federally Qualified Health Centers which improved their funding stability through Medicaid Prospective Payment System (PPS) reimbursement and Section 330 grants. 
+Several important differences between CHCs and CMHCs contributed to differences in the sustainability of their programs. CHCs had a simple goal-the provision of primary care-with a dominant funding source in Medicaid, while CMHCs had both goals of reducing institutionalization and of increasing outpatient mental health services. The CHC funding model aligned more clearly with Medicaid, while CMHC saw many patients that were uninsured or had to provide services that were not billable under Medicaid. While CMHCs experienced cuts in funding, CHCs evolved into Federally Qualified Health Centers which improved their funding stability through Medicaid Prospective Payment System (PPS) reimbursement and Section 330 grants. 
 
 % Community treatment proved challenging both because it was more complex than medical primary care and because the staff of CMHCs experienced competing demand from other people. %CMHCs were intended to provide services to people with serious mental illness who were leaving institutions, but they also start offering services to the broader community. Thus the scope of work for CMHCs was considerably less unified than those provided by CHCs. Centers needed to provide for the "health, housing, and jobs" of people who had been formerly institutionalized (cite Grob). Furthermore, once psychiatric services became available in the community, there was great demand for services by people who had not been residents of psychiatric hospitals. 
 % Not sure if the following claim is valid.
@@ -150,11 +152,19 @@ Several important differences between CHCs and CMHCs contributed to differences 
 \end{figure} 
 
 
-\subsection{The Second Era: Certified Community Behavioral Health Centers (2014-Present)}
+\subsection{Second Era: Community Behavioral Health Centers (2014-Present)}
 
-A second era of federal investment in community mental health was initiated by federal legislation in 2014, overlapping with the era when several literatures were increasingly becoming aware of ``deaths of despair'' (citex Deaton 2023). This created the CCBHC demonstration program. Rather than providing seed money for construction, the Act permitted CCBHCs to receive funding through the Medicaid PPS, mirroring the federal funding model that has stabilized FQHCs.  They also added additional treatment requirements, including 24/7 crisis services and medication for opioid use disorder. The initial demonstration program began in 2017 with eight states, and subsequent expansions involved counties applying for funding directly from the Substance Abuse and Mental Health Services Agency (SAMHSA).
+A second era of federal investment in community mental health was initiated by federal legislation in 2014, overlapping with the era when several literatures were increasingly becoming aware of ``deaths of despair'' (citex Deaton 2023). This created the Certified Community Behavioral Health Center (CCBHC) demonstration program. Rather than providing seed money for construction, the Act permitted CCBHCs to receive funding through the Medicaid PPS, mirroring the federal funding model that has stabilized FQHCs.  They also added additional treatment requirements, including 24/7 crisis services and medication for opioid use disorder. The initial demonstration program began in 2017 with eight states, and subsequent expansions involved counties applying for funding directly from the Substance Abuse and Mental Health Services Agency (SAMHSA).
 
 \subsection{Existing Work on Community Mental Health Facilities}
+
+An extensive and contested literature examines the relationship between the deinstitutionalization of individuals with serious mental illness (SMI) and the contemporaneous rise in incarceration and homelessness in the United States, a hypothesis often termed "transinstitutionalization." On one side, Penrose (citex 1939) first posited an inverse relationship between psychiatric hospital and prison populations, and more recently Torrey et al. (citex 2010, 2014) have argued forcefully that the emptying of state hospitals without adequate community alternatives led directly to the criminalization of mental illness and a massive shift of individuals with SMI into jails and prisons. Bronson and Berzofsky (citex) find that in 2012, people with SMI made up 26\% of people in local jails. 
+
+\hl{Add cites to Lamb and Weinberger}
+
+Many authors have challenged this tight causal interpretation. Raphael and Stoll (citex 2001) have shown that while deinstitutionalization contributed to the rise in incarceration, it was not the sole or primary driver. (citex Culhane et al. 2002) argues that these trends are better explained by poverty, lack of education, joblessness, and substance use, rather than by the discharge of psychiatric patients per se. In their analysis, populations affected by deinstitutionalization and mass incarceration overlap less than the psychiatric framework implies, and the response requires more than increasing psychiatric hospital capacity. The empirical evidence remains mixed, and disentangling the causal effect of deinstitutionalization from the many concurrent policy shifts of the late twentieth century has proven difficult.
+
+This paper sidesteps the broader transinstitutionalization debate and instead examines a more targeted policy question: what are the long-run effects of community mental health centers (CMHCs) themselves? Regardless of one's priors on the Penrose hypothesis, CMHCs represent a concrete, federally initiated intervention whose rollout generates plausibly exogenous variation in the availability of community-based mental health treatment. Understanding their effects is of independent interest because CMHCs were not merely a residual of hospital closures but were designed as a positive investment in outpatient infrastructure. Today they frequently serve as the institutional foundation from which more intensive programs such as Assertive Community Treatment (ACT), Assisted Outpatient Treatment (AOT), and other intervention models have been developed and scaled. These programs, in turn, sit at the center of contemporary debates over civil commitment reform. By estimating the causal effects of CMHCs on downstream outcomes including incarceration, this paper offers evidence on what community-based treatment capacity can accomplish on its own terms, independent of the unresolved questions surrounding deinstitutionalization and civil commitment.
 
 There is relatively little quantitative work on the impact of CMHCs. Table \ref{tab:balance} shows that cross-sectional evidence is insufficient for estimating these effects. As was the case for CHCs, counties that received CMHCs were larger, with higher income and schooling. This is consistent with the notion that more affluent areas were able to submit grant proposals to treat their needier residents.
 
@@ -233,12 +243,11 @@ Recent advances in the event-study literature have highlighted that the standard
 
 To explore the sensitivity of these results, I estimate additional models that add covariates sequentially. I also estimate models with county-specific, linear time trends ( $\theta_j t$ ) rather than parameterizing county trends using Table 1 characteristics. \textbf{\emph{I also reweight the untreated counties using a function of the estimated propensity of receiving a CMHC to balance the characteristics of treated and untreated counties in Table 1 (DiNardo, Fortin, and Lemieux 1996; Heckman et al. 1998).}}
 
-\section{Estimates of the Relationship Between Community Mental Health Centers and Mortality}
+\section{Estimates of the Relationship Between CMHCs and Life Outcomes}
 
-This section shows that CMHCs had a substantial impact on mortality among working-age adults, but not among the elderly, and that these effects are robust to controlling for the concurrent rollout of Community Health Centers. I also show evidence that CCBHCs reduced local jail populations, and that they had a protective effect against COVID-19 era rise in mortality due to deaths of despair. I also compare my estimates to those in Avery and LaVoice (citex 2023) and show that the differences in estimates are driven by the use of state-by-year fixed effects rather than state linear trends, which absorb some of the treatment effect and pre-trends.
+This section first shows that CMHCs had a substantial impact on mortality among working-age adults, but not among the elderly. I verify that these effects are robust to controlling for the concurrent rollout of Community Health Centers. I then use cause-of-death decompositions to show that the effects are driven by reductions in external causes (homicide, suicide, overdose), which is consistent with the mental health channels through which CMHCs were designed to operate. I compare my estimates to those in Avery and LaVoice (citex 2023) and show that the differences in estimates are driven by my use of state-by-year fixed effects rather than state linear trends, which have the risk of absorbing some of the treatment effect and pre-trends. I then turn to later life outcomes, including earnings and disability, finding evidence that people who were young during the expansion of these centers experienced protective effects decades later.
 
 \subsection{Results for All-Cause, Age Adjusted Mortality Rates}
-
 
 \begin{figure}
 \includegraphics[width=0.48\textwidth]{../build/output/figures/fig05b_cmhc_es_ad_sa_compare.pdf}
@@ -247,43 +256,23 @@ This section shows that CMHCs had a substantial impact on mortality among workin
 \caption{Event study of CMHC opening on adult (ages 20-49) and elderly (ages 50+) mortality.}
 \end{figure}
 
-Figure \ref{fig:cmhc_es} plots event-study estimates from the baseline specification which includes state-year fixed effects ($\delta_{s(j)t}$) and county ($X_jt$) covariates. 
+Figure \ref{fig:cmhc_es} plots event-study estimates from the baseline specification which includes state-year fixed effects ($\delta_{s(j)t}$) and county ($X_jt$) covariates. The panel on the left shows estimates for adults ages 20-49, on the right for adults ages 50+. \textbt{\emph{The line with dots shows the Sun and Abraham (2021) estimates, which here is the baseline specification. The shaded area shows the 95\% confidence interval for the Sun and Abraham (2021) estimates. The line with triangles shows the standard two-way fixed effects estimates. The line with open circles shows the two-way fixed effects estimates without state-year fixed effects, which is the specification used in Avery and LaVoice (2023). The line with squares shows the baseline specification with controls for the concurrent rollout of Community Health Centers.}}
 
-of the relationship between CMHCs and all-cause, age-adjusted mortality rates for two groups, adults ages 20-49 and ages 50+. The pre-treatment coefficients are flat and close to zero, supporting the notion that the timing of CMHC establishment is not correlated with pre-existing trends in mortality. After treatment, there is a gradual decline in mortality that reaches approximately -10 to -12 per 100,000 by event year +10 to +13. This is a substantial effect given baseline mortality in this age group. There is a partial rebound in the far-right tail (years 15+), which corresponds to the 1981 block-grant conversion for later-adopting CMHCs. This rebound is consistent with the funding withdrawal story and is itself informative about the role of sustained investment.
+Across specifications for younger adults there is no evidence for differential trends in mortality in treated counties before the CMHC program began. As in Bailey and Goodman Bacon (2015), this implies that the structure of fixed effects and trends captures the generally declining AMR during this time period. Pre-treatment coefficients are flat and close to zero, supporting the notion that the timing of CMHC establishment is not correlated with pre-existing trends in mortality. After treatment, there is a gradual decline in mortality that reaches approximately -10 to -12 per 100,000 by event year +10. This is a substantial effect given baseline mortality in this age group. 
 
+The event study for older adults provides a placebo test for the main effects, since mortality in this age group is  more driven by chronic disease than it is for younger adults. Coefficients for years prior to center construction suggest that centers were constructed in areas where mortality for older adults was declining faster. This is consistent with the notion centers were not targeted to areas with high mental health mortality but rather to areas with more resources and better healthcare infrastructure. Coefficient after treatment are flat with wide standard errors. This rules out that the results for younger adults are driven by a general improvement in healthcare infrastructure.
 
+The Sun and Abraham (2021) decomposition gives a straightforward comparison between areas that received centers earlier and later, suggesting that the effects were strongest for earlier cohorts. This is consistent with \emph{\textbf{the reduction in funding that occurred after 1975 (Check Grob for 1975 funding clawback details and citex).}} Table \ref{tab:cmhc_sunab} shows the treatment effects and characteristics of counties that received centers by cohort.
 
-Overall, need better alignment with NBER data:
-\begin{itemize}
-\item Ran \texttt{build/fig5b} on NBER data and it showed ugly event studies with only slight differences across causes
-\item Ran NBER mortality Poisson to get as close to Avery and LaVoice specification, found close but inconsistency. Improved with age adjustment.
-\item Compared age-adjusted NBER mortality to AER mortality, still saw some differences
-\item Running age-adjusted NBER mortality decomp on server (will this be better than 5b?)
-\end{itemize}
+% Add paragraph about comparison between urban and rural. 
 
-% ## A. Results for All-Cause, Age-Adjusted Mortality Rates
+There is a partial rebound in the far-right tail (years 15+), which corresponds to the 1981 block-grant conversion for later-adopting CMHCs. This rebound is consistent with the funding withdrawal story and is itself informative about the role of sustained investment.
 
-% 42. "We summarize the effect of CHCs in treated locations using the age-adjusted mortality rates for all ages and causes."
+\input{../build/output/tables/table02_dd_robustness.tex}
 
-% - Table 2­ —Robustness Checks on the Relationship between Community Health Centers and All-Cause Mortality Rates
+Estimates are fairly consistent across a set of different specifications that verify the robustness of the results. Table \ref{tab:robustness} summarizes the event study estimates across time bins for several specifications. Specifications are listed along the rows, and time bins are listed along the columns. Row (1) shows estimates from a specification with county fixed effects $\theta_j$ and urban quintile by year fixed effects $\gamma_{u(j)t}$. This is the two-way fixed effects analogue of the specification used in Avery and LaVoice (2023). Row (2) adds state-year fixed effects $\delta_{s(j)t}$, reflecting the baseline specification. Row (3) adds county covariates and time trends based on the covariates from the 1960 Census row (4) adds county-specific linear time trends $\theta_j t$ rather than time trends on controls for county characteristics. Row (5) adds controls for Community Health Center rollout. Row (6) includes propensity score reweighting of the control group to balance the characteristics of treated and untreated counties in Table 1.
 
-% 43. "The results are similar in the three cases and provide no evidence of a differential evolution of pre-program mortality in treated counties based on their eventual treatment date."
-
-% - Figure 6. Heterogeneity in the Relationship between Community Health Centers and Mortality Rates by Population Density
-
-% 44. "Post-CHC declines in mortality rates are not as sharp for the later centers (those funded 1975–1980) when the program had begun to target underserved areas using the Index of Medical Underservice (IMU)."
-
-% 45. "The robustness of the estimates in the reweighted sample is particularly helpful, as comparisons between treated and untreated counties are made in the region of common support."
-
-
-% **Paragraph 33 — Event study, ages 20–49.**
-% Present the headline CMHC event-study figure. [Figure 5.] Describe the pattern: flat pre-trends near zero, followed by a gradual decline in mortality beginning at treatment, reaching approximately −10 to −12 per 100,000 by event year +10 to +13. Discuss the partial rebound in the far-right tail (years 15+), which corresponds to the 1981 block-grant conversion for later-adopting CMHCs. This rebound is consistent with the funding withdrawal story and is itself informative about the role of sustained investment.
-
-% **Paragraph 34 — Placebo: ages 50+.**
-% Present the event-study for ages 50+. [Figure 6.] Flat and noisy coefficients centered on zero throughout the event window. This rules out that the 20–49 result is driven by general improvements in healthcare infrastructure and confirms that the effect operates through mental health channels rather than primary care or cardiovascular channels.
-
-% **Paragraph 35 — DD summary estimates.**
-% Present the aggregated DD estimates in a table. [Table 2.] Show robustness across specifications: county FE only, county + state-year FE, state-specific trends, propensity score reweighting, and staggered-DD estimators.
+% BGB:45. "The robustness of the estimates in the reweighted sample is particularly helpful, as comparisons between treated and untreated counties are made in the region of common support."
 
 % ### 6.2 Robustness
 
@@ -292,6 +281,18 @@ Overall, need better alignment with NBER data:
 
 % **Paragraph 37 — Additional robustness.**
 % Describe additional checks: different control groups (boundary analysis, propensity-score trimmed samples), alternative specifications (Poisson, Callaway-Sant'Anna, Sun-Abraham), and controlling for other concurrent programs (Medicaid, Medicare, SSDI/SSI).
+
+\subsection{Results for Cause-Specific Age Adjusted Mortality Rates}
+
+\input{../build/output/tables/table03_cause_decomp_cmhc.tex}
+
+Decomposing all-cause mortality effects by cause of death sheds light on the mechanisms through which CMHCs operated. Table \ref{tab:cause_decomp} shows the event study estimates binned across years for different causes of death. The first row shows the all-cause mortality effects, which are consistent with the event study estimates in Figure \ref{fig:cmhc_es}. The rest of Panel A decomposes the all-cause effect into various causes. Internal causes (Cardiovascular, Cerebrovascular, Cancer, Infectious Disease, Diabetes) consistently show no significant effects of opening a mental health center. Panel B repeats this decomposition with public NBER Multiple Cause of Death mortality data to verify that the results are consistent across data sources. The final row of Panel B includes all other causes of death. The first row of Panel C then shows that these other causes are dominated by external causes of death. The rest of Panel C adds and decomposes these external causes, which include suicides, homicides, drug overdoses, and accidents. Panel D turns to a race-specific decomposition of external causes.
+
+\hl{Verify the results in the NBER data here.}
+
+Similar to Avery and LaVoice (2023), I find that the results on all-cause mortality are concentrated in external causes of death, which include suicides, homicides, drug overdoses, and accidents. These are the causes most directly linked to mental illness and its treatment. The finding that effects extend beyond the narrow set of causes examined by Avery and LaVoice (2023) explains why all-cause effects are larger than the sum of their cause-specific estimates. One of the challenges for interpreting those estimates is that they find significant effects primarily when pooling together the years after center construction. Their event study estimates for individual years are noisy and often not significant. \emph{\textbf{By contrast, my specification with state-year fixed effects produces more precise estimates that show significant effects in individual years after center construction.}} I find flat pretrends and coefficients that monotonically decline after center construction. I also find in a specification that adds county-specific time trends that the declines in homicide after center opening are significant for both white and non-white populations.
+
+
 
 % ### 6.3 Heterogeneity and Mechanisms
 
@@ -307,16 +308,38 @@ Overall, need better alignment with NBER data:
 % **Paragraph 41 — The funding withdrawal and the late-period rebound.**
 % Discuss the partial rebound in mortality effects visible in the far-right tail of the event study. For late-adopting CMHCs, event years 10–15 correspond to the post-1981 block grant era. This pattern—initial improvement followed by partial reversal when funding is cut—is itself evidence of a causal relationship between community mental health investment and mortality.
 
-\subsection{Evidence that CBCHCs Reduce Mortality}
+\subsection{Results on Other Life Outcomes}
 
-\subsection{Evidence that Community Mental Health Facilities Reduce Incarceration}
+Next I examine is the impact of CMHC establishment on incarceration and find some evidence that they reduced local jail populations. Data on this is sparse, and so I am only able to estimate a simple long difference specification comparing the change in jail population from 1970 to 1980 in counties that received CMHCs by 1975 to the change in counties that did not receive CMHCs by 1975. Table \ref{tab:longdiff} shows the results. \hl{The point estimate in A means B.} I find that counties that received CMHCs experienced a \hl{10\%} reduction in local jail populations relative to counties that did not receive CMHCs. This is consistent with the finding in other sections that CMHCs reduced homicide mortality.
+
+Since the best evidence of impacts is on working-age adults, I examine the impacts on long-term outcomes for children who were young during the expansion of CMHCs. 
 
 \subsection{Replication of Avery and LaVoice (2023)}
 
+\hl{complete this.}
+
+\section{Estimates of the Relationship Between CCBHCs and Life Outcomes}
+
+Turning to the contemporary era, I show evidence that CCBHCs have had similar impacts on incarceration and mortality. I also show evidence that CCBHCs reduced local jail populations, and that they had a protective effect against COVID-19 era rise in mortality due to deaths of despair. 
+
+\subsection{Evidence of the Relationship Between CCBHCs and Mortality}
+
+
+\begin{figure}
+\includegraphics[width=0.48\textwidth]{../build/output/figures/fig08_ccbhc_es_mort.pdf}
+\includegraphics[width=0.48\textwidth]{../build/output/figures/fig_ccbhc_es_dod.pdf}
+\caption{Event study of CCBHC opening on adult (ages 25-44) mortality.}
+\end{figure}
+
+\subsection{Evidence of the Relationship Between CCBHCs and Incarceration}
+
+
+\section{The Longer-Term Returns to Community Mental Health}
+
+
+
 
 % administrative confusion in the rollout process (Comptroller General 1971 report)
-
-
 
 
 % these differences are why Bailey and Goodman-Bacon say that cross-sectional evidence would not work -- but why does it not invalidate the event study? Because the identifying assumption is parallel pre-trends.
@@ -324,8 +347,6 @@ Overall, need better alignment with NBER data:
 
 
 
-
-\input{../build/output/tables/table02_dd_robustness.tex}
 
 \input{../build/output/tables/table03_cause_decomp_cmhc.tex}
 
@@ -347,11 +368,7 @@ Overall, need better alignment with NBER data:
 %\caption{Heterogeneous effects of CMHC opening across counties.}
 %\end{figure}
 
-\begin{figure}
-\includegraphics[width=0.48\textwidth]{../build/output/figures/fig08_ccbhc_es_mort.pdf}
-\includegraphics[width=0.48\textwidth]{../build/output/figures/fig_ccbhc_es_dod.pdf}
-\caption{Event study of CCBHC opening on adult (ages 25-44) mortality.}
-\end{figure}
+
 
 \begin{figure}
 \includegraphics[width=\textwidth]{../build/output/figures/fig09_ccbhc_robust.pdf}
@@ -365,6 +382,15 @@ Overall, need better alignment with NBER data:
 %\includegraphics[width=\textwidth]{../build/output/figures/fig10_ccbhc_es_inc.pdf}
 %\caption{Event study of CCBHC opening on local jail incarceration rate.}
 %\end{figure}
+
+
+Overall, need better alignment with NBER data:
+\begin{itemize}
+\item Ran \texttt{build/fig5b} on NBER data and it showed ugly event studies with only slight differences across causes
+\item Ran NBER mortality Poisson to get as close to Avery and LaVoice specification, found close but inconsistency. Improved with age adjustment.
+\item Compared age-adjusted NBER mortality to AER mortality, still saw some differences
+\item Running age-adjusted NBER mortality decomp on server (will this be better than 15b?)
+\end{itemize}
 
 
 
